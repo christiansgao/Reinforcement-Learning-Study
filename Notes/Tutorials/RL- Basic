@@ -1,0 +1,20 @@
+http://icml.cc/2016/tutorials/deep_rl_tutorial.pdf
+
+
+At each step t the agent:
+- Executes action at
+- Receives observation ot
+- Receives scalar reward rt
+
+The environment:
+- Receives action at
+- Emits observation ot+1
+- Emits scalar reward rt+1
+
+I Experience is a sequence of observations, actions, rewards
+o1, r1, a1, at−1, ot, rt
+I The state is a summary of experience
+st = f (o1,r1, a1, ..., at−1, ot ,rt)
+I In a fully observed environment
+st = f (ot)
+
