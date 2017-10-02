@@ -7,7 +7,7 @@ import math
 from time import sleep
 
 ## Initialize the "Cart-Pole" environment
-env = gym.make('CartPole-v1')
+env = gym.make('CartPole-v0')
 
 def simulate():
 
@@ -21,7 +21,7 @@ def simulate():
         for t in range(100):
             env.render()
 
-            action =  env.step(env.action_space.sample()) # take a random action
+            action =  env.action_space.sample() # take a random action
 
             # Execute the action
             obv, reward, done, _ = env.step(action)
