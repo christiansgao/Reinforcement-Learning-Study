@@ -27,7 +27,7 @@ def simulate():
             obv, reward, done, _ = env.step(action)
 
 def trainQTable(obv, reward):
-    print "Training";
+    print("Training");
 
 
 

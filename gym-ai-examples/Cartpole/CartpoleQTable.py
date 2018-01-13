@@ -4,7 +4,6 @@ import random
 import math
 from time import sleep
 
-
 ## Initialize the "Cart-Pole" environment
 env = gym.make('CartPole-v0')
 
@@ -15,9 +14,12 @@ NUM_BUCKETS = (1, 1, 6, 3)  # (x, x', theta, theta')
 # Number of discrete actions
 NUM_ACTIONS = env.action_space.n # (left, right)
 # Bounds for each discrete state
+test = zip(env.observation_space.low, env.observation_space.high)
+test = env.observation_space.low
+test = env.observation_space.high
 STATE_BOUNDS = list(zip(env.observation_space.low, env.observation_space.high))
-STATE_BOUNDS[1] = [-0.5, 0.5]
-STATE_BOUNDS[3] = [-math.radians(50), math.radians(50)]
+#STATE_BOUNDS[1] = [-0.5, 0.5]
+#STATE_BOUNDS[3] = [-math.radians(50), math.radians(50)]
 # Index of the action
 ACTION_INDEX = len(NUM_BUCKETS)
 
