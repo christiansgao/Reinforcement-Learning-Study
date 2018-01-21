@@ -1,13 +1,16 @@
 import numpy as np
 from experiment.HashNode import HashNode
 from pandas import *
+import random
 import gc
 
-class SimpleHashNode(HashNode):
-    def __init__(self, predictor_indexs, response_index):
+
+class RandomNode(HashNode):
+    def __init__(self, predictor_indexs, response_index, hash_length):
         super().__init__(predictor_indexs, response_index)
         self.predictions_map = {}
         self.response_set = ""
+        self.hash_length = hash_length
 
     def train(self, data):
         '''
@@ -20,15 +23,16 @@ class SimpleHashNode(HashNode):
 
         for row in data.iterrows():
             row = row[1]
+            random_indexs = np.random.choice(self.predictor_indexs, size=self.hash_length, replace=False)
             value = row[self.response_index]
-            key = row[self.predictor_indexs].astype(str).str.cat(sep=',')
+            key = row[random_indexs].astype(str).str.cat(sep=',')
             self.predictions_map[key] = value
-
-    gc.collect()
+            gc.collect()
 
     def extract_key(self, row):
         row = row[1]
-        key = row[self.predictor_indexs].astype(str).str.cat(sep=',')
+        random_indexs = np.random.choice(self.predictor_indexs, size=self.hash_length, replace=False)
+        key = row[random_indexs].astype(str).str.cat(sep=',')
         return key
 
     def predict(self, key):
@@ -36,7 +40,6 @@ class SimpleHashNode(HashNode):
         :type key: str 
         :return: str
         '''
-
 
         if key in self.predictions_map.keys():
             return self.predictions_map.get(key)
@@ -48,7 +51,7 @@ class SimpleHashNode(HashNode):
 
 
 def main():
-    hashNode = SimpleHashNode(predict_index=[0], response_index=4)
+    hashNode = RandomNode(predictor_indexs=[0, 1, 2, 3], response_index=4, hash_length=2)
     iris_df = read_csv("iris.data.txt", header=None)
     iris_df = iris_df.sample(frac=1).reset_index(drop=True)
     iris_group = iris_df[0].unique().size
