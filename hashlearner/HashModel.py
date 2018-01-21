@@ -1,11 +1,11 @@
 import pandas
 from array import array
-from experiment.HashNode import HashNode
-from experiment.SimpleHashNode import SimpleHashNode
+from hashlearner.HashNode import HashNode
+from hashlearner.SimpleHashNode import SimpleHashNode
 import sklearn.metrics as sk_metrics
 import numpy as np
 import sklearn.model_selection as sk_model
-from experiment.RandomNode import RandomNode
+from hashlearner.RandomNode import RandomNode
 import time
 
 

@@ -1,5 +1,5 @@
 import numpy as np
-from experiment.HashNode import HashNode
+from hashlearner.HashNode import HashNode
 from pandas import *
 import gc
 
