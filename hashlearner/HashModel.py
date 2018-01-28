@@ -31,7 +31,7 @@ class HashModel:
 
     def train_model(self):
 
-        '''
+
         self.hash_node_list.append(
             SimpleHashNode(predictor_indexs=[0], response_index=self.response_index))
         self.hash_node_list.append(
@@ -42,7 +42,6 @@ class HashModel:
             SimpleHashNode(predictor_indexs=[2], response_index=self.response_index))
         self.hash_node_list.append(
             SimpleHashNode(predictor_indexs=[3], response_index=self.response_index))
-        '''
         self.hash_node_list.append(
             RandomNode(predictor_indexs=[0,1,2,3], response_index=self.response_index, hash_length=2))
 
