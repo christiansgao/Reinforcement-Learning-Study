@@ -9,6 +9,7 @@ import sklearn.model_selection as sk_model
 from hashlearner.RandomNode import RandomNode
 import time
 import _thread
+from sklearn.model_selection import train_test_split
 
 from multiprocessing.pool import ThreadPool
 
@@ -36,8 +37,7 @@ def test_model(df, i):
 
 
 def main():
-    iris_df = pandas.read_csv("iris.data.txt", header=None).sample(frac=1)
-
+    iris_df = pandas.read_csv("data/iris.data.txt", header=None).sample(frac=1)
     test_iterations = 10
     t0 = time.time()
 

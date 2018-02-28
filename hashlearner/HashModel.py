@@ -9,7 +9,6 @@ from hashlearner.RandomNode import RandomNode
 import time
 
 
-
 class HashModel:
     def __init__(self, data, response_indexs, predictor_indexes=None):
         '''
@@ -29,13 +28,17 @@ class HashModel:
         else:
             self.predictor_indexes = predictor_indexes  # type : str
 
+    def smooth_model(self):
+        '''
+        Smooths model to give better estimates.
+        :return: 
+        '''
+
     def train_model(self):
-
-
-        self.hash_node_list.append(
-            SimpleHashNode(predictor_indexs=[0], response_index=self.response_index))
         self.hash_node_list.append(
             SimpleHashNode(predictor_indexs=[1, 2], response_index=self.response_index))
+        self.hash_node_list.append(
+            SimpleHashNode(predictor_indexs=[0], response_index=self.response_index))
         self.hash_node_list.append(
             SimpleHashNode(predictor_indexs=[1], response_index=self.response_index))
         self.hash_node_list.append(
@@ -43,7 +46,7 @@ class HashModel:
         self.hash_node_list.append(
             SimpleHashNode(predictor_indexs=[3], response_index=self.response_index))
         self.hash_node_list.append(
-            RandomNode(predictor_indexs=[0,1,2,3], response_index=self.response_index, hash_length=2))
+            RandomNode(predictor_indexs=[0, 1, 2, 3], response_index=self.response_index, hash_length=2))
 
         for hash_node in self.hash_node_list:
             hash_node.train(data=self.data)
@@ -51,25 +54,29 @@ class HashModel:
     def predict(self, data):
         '''
         :type data: pandas.DataFrame
-        :return: 
+        :rtype: list
         '''
 
         predictions = []
         for row in data.iterrows():
             candidates = {}
+            # Make prediction from each model
             for hashNode in self.hash_node_list:
                 extracted_row = hashNode.extract_key(row)
                 prediction = hashNode.predict(hashNode.extract_key(row))
+                if prediction == None:
+                    continue
                 if not prediction in candidates:
                     candidates[prediction] = 1
                 else:
                     candidates[prediction] += 1
-            predictions.append(max(candidates, key=candidates.get))
+
+            prediction = max(candidates, key=candidates.get) if len(candidates) != 0 else np.random.choice(self.response_set)
+            predictions.append(prediction)
         return predictions
 
 
 def main():
-
     iris_df = pandas.read_csv("iris.data.txt", header=None).sample(frac=1)
     train, test = sk_model.train_test_split(iris_df, test_size=0.2)
 
@@ -99,6 +106,7 @@ def main():
     print("Success Rate is: " + str(success_rate))
     print("Random Success Rate is: " + str(rand_success_rate))
     print("Time taken: " + str(t1 - t0) + "Seconds")
+
 
 if __name__ == "__main__":
     main()
