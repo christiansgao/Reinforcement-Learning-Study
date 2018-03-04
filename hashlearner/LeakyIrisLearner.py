@@ -1,26 +1,22 @@
-import pandas
-from hashlearner.HashModel import HashModel
-from array import array
-from hashlearner.HashNode import HashNode
-from hashlearner.SimpleHashNode import SimpleHashNode
-import sklearn.metrics as sk_metrics
-import numpy as np
-import sklearn.model_selection as sk_model
-from hashlearner.RandomNode import RandomNode
+import os
 import time
-import _thread
-from sklearn.model_selection import train_test_split
-
 from multiprocessing.pool import ThreadPool
 
+import numpy as np
+import pandas
+import sklearn.metrics as sk_metrics
+import sklearn.model_selection as sk_model
 
-def test_model(df, i):
+from hashlearner.hashmodels.LeakyHashModel import LeakyHashModel
+
+
+def run_model(df, i):
     train, test = sk_model.train_test_split(df, test_size=0.2)
 
     true_values = list(test[4])
     random_predictions = np.random.permutation(true_values)
 
-    hash_model = HashModel(train, response_indexs=[4])
+    hash_model = LeakyHashModel(train, response_indexs=[4])
     hash_model.train_model()
     predictions = hash_model.predict(test)
 
@@ -37,6 +33,8 @@ def test_model(df, i):
 
 
 def main():
+
+    ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # This is your Project Root
     iris_df = pandas.read_csv("data/iris.data.txt", header=None).sample(frac=1)
     test_iterations = 10
     t0 = time.time()
@@ -45,8 +43,8 @@ def main():
     random = []
     pool = ThreadPool(processes=8)
     for i in range(test_iterations):
-        train, rand = pool.apply_async(test_model, (iris_df, i)).get()  # tuple of args for foo
-        # train, rand = test_model(iris_df, i)
+        train, rand = pool.apply_async(run_model, (iris_df, i)).get()  # tuple of args for foo
+        # train_node, rand = run_model(iris_df, i)
         trained.append(train)
         random.append(rand)
 

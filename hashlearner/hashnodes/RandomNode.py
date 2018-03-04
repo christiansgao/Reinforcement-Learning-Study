@@ -1,5 +1,5 @@
 import numpy as np
-from hashlearner.HashNode import HashNode
+from hashlearner.hashnodes.HashNode import HashNode
 from pandas import *
 import random
 import gc
@@ -12,7 +12,7 @@ class RandomNode(HashNode):
         self.response_set = ""
         self.hash_length = hash_length
 
-    def train(self, data):
+    def train_node(self, data):
         '''
         :type data_columns: DataFrame
         :type selected_predictors: array 
@@ -55,7 +55,7 @@ def main():
     iris_df = read_csv("iris.data.txt", header=None)
     iris_df = iris_df.sample(frac=1).reset_index(drop=True)
     iris_group = iris_df[0].unique().size
-    hashNode.train(iris_df)
+    hashNode.train_node(iris_df)
     for row in iris_df.iterrows():
         print(hashNode.predict(hashNode.extract_key(row)))
 
