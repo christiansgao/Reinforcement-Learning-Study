@@ -1,4 +1,4 @@
-mnistlearner/data/*
+data/*
 .idea
 *.pyc
 
