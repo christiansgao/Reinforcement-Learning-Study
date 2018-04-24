@@ -8,7 +8,7 @@ class HashNode(ABC):
     Generic Node takes in predictor indexs and response indexs.
     '''
 
-    def __init__(self, predictor_indexs, response_index, decimal_precision):
+    def __init__(self, predictor_indexs, response_index, decimal_precision = DEFAULT_DECIMAL_PRECISION):
         '''
         :type hashtype: int
         :type predictor_indexs: list
