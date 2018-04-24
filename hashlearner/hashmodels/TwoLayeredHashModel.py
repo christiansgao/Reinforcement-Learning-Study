@@ -1,5 +1,5 @@
 import time
-
+import os
 import numpy as np
 import pandas
 import sklearn.metrics as sk_metrics
@@ -82,7 +82,8 @@ class SimpleHashModel(HashModel):
 
 
 def main():
-    iris_df = pandas.read_csv("data/iris.data.txt", header=None).sample(frac=1)
+
+    iris_df = pandas.read_csv("../data/iris.data.txt", header=None).sample(frac=1)
     train, test = sk_model.train_test_split(iris_df, test_size=0.2)
 
     t0 = time.time()

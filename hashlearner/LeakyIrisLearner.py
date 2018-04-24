@@ -1,16 +1,21 @@
 import os
 import time
-from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import ThreadPool, Pool
 
+import hashlearner.helper.RunAsynchTests as RunAsynchTest
 import numpy as np
 import pandas
 import sklearn.metrics as sk_metrics
 import sklearn.model_selection as sk_model
+import scipy
+from itertools import product
+
 
 from hashlearner.hashmodels.LeakyHashModel import LeakyHashModel
 
 
 def run_model(df, i):
+    np.random.seed()
     train, test = sk_model.train_test_split(df, test_size=0.2)
 
     true_values = list(test[4])
@@ -36,17 +41,10 @@ def main():
 
     ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # This is your Project Root
     iris_df = pandas.read_csv("data/iris.data.txt", header=None).sample(frac=1)
-    test_iterations = 10
+    test_iterations = 8
     t0 = time.time()
 
-    trained = []
-    random = []
-    pool = ThreadPool(processes=8)
-    for i in range(test_iterations):
-        train, rand = pool.apply_async(run_model, (iris_df, i)).get()  # tuple of args for foo
-        # train_node, rand = run_model(iris_df, i)
-        trained.append(train)
-        random.append(rand)
+    trained, random = RunAsynchTest.run_asynch_test(function=run_model, dataset= iris_df, iterations=8)
 
     t1 = time.time()
 

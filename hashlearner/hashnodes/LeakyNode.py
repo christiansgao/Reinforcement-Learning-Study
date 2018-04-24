@@ -48,7 +48,7 @@ class LeakyNode(HashNode):
             self.predictions_map[key] = value
             if deviate == True:
                 fuzzy_predictors = [np.around(np.array(predictor) + spread, decimals=self.decimal_precision) for predictor, spread in zip(predictors,sd_spreads)]
-                fuzzy_predictors = fuzzy_predictors.astype(str)
+                #fuzzy_predictors = fuzzy_predictors.astype(str)
                 expanded_fuzzy = list(itertools.product(*fuzzy_predictors))  # iterate through rows of fuzzy predictors
                 for fuzzy_row in expanded_fuzzy:  # type: np.ndarray
                     key = ",".join(str(predictor) for predictor in fuzzy_row)

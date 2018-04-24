@@ -7,7 +7,7 @@ import gc
 
 class RandomNode(HashNode):
     def __init__(self, predictor_indexs, response_index, hash_length):
-        super().__init__(predictor_indexs, response_index)
+        super().__init__(predictor_indexs, response_index,decimal_precision=3)
         self.predictions_map = {}
         self.response_set = ""
         self.hash_length = hash_length
