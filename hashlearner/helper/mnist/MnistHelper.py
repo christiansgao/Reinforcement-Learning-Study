@@ -1,5 +1,6 @@
 import numpy as np
 import itertools
+from skimage.transform import rescale, resize, downscale_local_mean
 
 
 def convolve(image=None, kernel_dim=(3, 3)):
@@ -11,3 +12,19 @@ def convolve(image=None, kernel_dim=(3, 3)):
     convolved_matrixs = list(itertools.chain(*sub_matrices_list))
 
     return convolved_matrixs
+
+def down_scale_images(images: list, ratio: int):
+    images_rescaled = [rescale(image, ratio) for image in images]
+    return images_rescaled
+
+def down_scale_image(image: np.ndarray, ratio: int):
+    return rescale(image, ratio, preserve_range = True)
+
+def binarize_image(image: np.ndarray, threshold: int):
+    image[image < threshold] = 0
+    image[image > threshold] = 1
+    return image
+
+def binarize_images(images: list, threshold: int):
+    binarized_images = [binarize_image(image) for image in images]
+    return binarized_images
