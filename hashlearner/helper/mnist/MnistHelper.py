@@ -14,7 +14,7 @@ def convolve(image=None, kernel_dim=(3, 3)):
     return convolved_matrixs
 
 def down_scale_images(images: list, ratio: int):
-    images_rescaled = [rescale(image, ratio) for image in images]
+    images_rescaled = [down_scale_image(image, ratio) for image in images]
     return images_rescaled
 
 def down_scale_image(image: np.ndarray, ratio: int):
@@ -26,5 +26,5 @@ def binarize_image(image: np.ndarray, threshold: int):
     return image
 
 def binarize_images(images: list, threshold: int):
-    binarized_images = [binarize_image(image) for image in images]
+    binarized_images = [binarize_image(image, threshold) for image in images]
     return binarized_images
