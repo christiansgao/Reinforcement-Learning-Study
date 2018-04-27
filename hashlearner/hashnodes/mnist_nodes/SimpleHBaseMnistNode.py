@@ -11,8 +11,10 @@ from hashlearner.hashnodes.HashNode import HashNode
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 from hbase.HBaseManager import HBaseManager, HBaseRow
 import happybase
+import itertools
 import _thread
 from concurrent.futures import ThreadPoolExecutor
+
 
 class SimpleMnistNode(HashNode):
     '''
@@ -29,14 +31,9 @@ class SimpleMnistNode(HashNode):
 
     def __init__(self, predictor_indexs, response_index):
         super().__init__(predictor_indexs, response_index)
-        connection_pool = happybase.ConnectionPool(size=10, host=HBaseManager.HOST, port=HBaseManager.PORT)
-        self.hbase_manager = HBaseManager(connection_pool)
-        self.executor = ThreadPoolExecutor(max_workers=10)
-        self.response_set = ""
-        self.setup()
 
-    def setup(self):
-        self.hbase_manager.create_table(table_name=self.TABLE_NAME, delete=True)
+    def setup(self, hbase_manager):
+        hbase_manager.create_table(table_name=self.TABLE_NAME, delete=True)
 
     def train_node(self, mnist_data, deviate=True):
         '''
@@ -44,48 +41,50 @@ class SimpleMnistNode(HashNode):
         :type deviate: boolean
         :rtype: None
         '''
-
         print("Starting Training for mnist data")
 
-        j = 1
+        connection_pool = happybase.ConnectionPool(size=100, host=HBaseManager.HOST, port=HBaseManager.PORT)
+        hbase_manager = HBaseManager(connection_pool)
+        self.setup(hbase_manager)
+
         process_pool = Pool(10)
         thread_pool = ThreadPool(10)
+        n = len(mnist_data)
 
         numbers = [mnist_obs[0] for mnist_obs in mnist_data]
         mnist_images = [mnist_obs[1] for mnist_obs in mnist_data]
+        indexs = list(range(n))
 
-        r = process_pool.map_async(self.extract_keys, (None,))
-        extracted_keys= r.get()
+        extract_process = process_pool.starmap_async(self.extract_keys, zip(mnist_images, indexs))
+        extracted_keys = extract_process.get()
+
+        t0 = time.time()
+
+        store_hash_args = zip(extracted_keys, numbers, itertools.repeat(hbase_manager, n), indexs)
+        #[self.store_hash_values(k,n,h,i) for k,n,h,i in store_hash_args]
+        hash_store_process = thread_pool.starmap_async(self.store_hash_values, store_hash_args)
+        hash_store_status = hash_store_process.get()
+
         process_pool.close()
-        process_pool.join()
+        thread_pool.close()
 
-        '''for mnist_obs in mnist_data:
-            number = mnist_obs[0]
-            mnist_image = mnist_obs[1]
-            #_thread.start_new_thread(self.add_to_predictions, (mnist_image, number, j))
-            hash_keys = process_pool.apply_async()
-            pool.apply_async(self.add_to_predictions, (mnist_image, number, j))
-            #self.executor.submit(self.add_to_predictions, (mnist_image, number, j))
-            #self.add_to_predictions(mnist_image, number, j)
-            j += 1'''
+        t1 = time.time()
+        print("Time taken hash: " + str(t1 - t0) + " Seconds")
 
         print("Training for Mnist Data Finished")
 
         return True
-        #pool.close()
-        #pool.join()
 
-    def add_to_predictions(self, mnist_image: np.ndarray, number: int, j: int):
+    def store_hash_values(self, hash_keys: np.ndarray, number: int, hbase_manager: HBaseManager, index: int):
+        batch_insert_rows = [
+            HBaseRow(row_key=hash_key, row_values={"number": number}, family_name=HBaseManager.FAMILY_NAME)
+            for hash_key in hash_keys
+        ]
+        status = hbase_manager.batch_insert(self.TABLE_NAME, batch_insert_rows)
+        print("trained keys for image {0} with status: {1} ".format(str(index), str(status)))
+        return True
 
-        hash_keys = self.extract_keys(mnist_image)
-        batch_insert_rows = [HBaseRow(row_key=hash_key, row_values={"number": number}, family_name=HBaseManager.FAMILY_NAME) for hash_key in hash_keys]
-        status = self.hbase_manager.batch_insert(self.TABLE_NAME, batch_insert_rows)
-
-        print("trained keys for image {0} with status: {1} ".format(str(j),str(status)))
-
-    def extract_keys(self, mnist_image: np.ndarray):
-
-        print("test")
+    def extract_keys(self, mnist_image: np.ndarray, index: int):
         convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.CONVOLVE_SHAPE)
         images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.DOWN_SCALE_RATIO)
         binarized_images = MnistHelper.binarize_images(images_rescaled, threshold=self.BINARIZE_THRESHOLD)
@@ -96,6 +95,7 @@ class SimpleMnistNode(HashNode):
         useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
         positioned_keys = [str(position) + "-" + key for key, position in useful_features]
 
+        print("extracted key from image: " + str(index))
         return positioned_keys
 
     def extract_key(self, row):
@@ -107,7 +107,8 @@ class SimpleMnistNode(HashNode):
         :return: str
         '''
 
-        return None
+        list(filter(None.__ne__, hashed_predictions))
+
 
     def predict_from_image(self, mnist_image):
         hash_keys = self.extract_keys(mnist_image)
@@ -116,8 +117,7 @@ class SimpleMnistNode(HashNode):
             print("no good hash keys")
             return random.choice(self.ALL_DIGITS)
 
-        hashed_predictions = [self.predict(key) for key in hash_keys]
-        hashed_predictions = list(filter(None.__ne__, hashed_predictions))
+        hashed_predictions = self.predict(hash_keys)
 
         if len(hashed_predictions) == 0:
             print("no collision predictions")
@@ -131,6 +131,7 @@ class SimpleMnistNode(HashNode):
 
     def predict_from_images(self, mnist_images):
         pool = Pool(10)
+        thread_pool = ThreadPool(10)
         results = [pool.apply_async(self.predict_from_image, args=(mnist_image,)) for mnist_image in mnist_images]
         pool.close()
         pool.join()
@@ -143,7 +144,7 @@ class SimpleMnistNode(HashNode):
 
 def main():
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:100]
+    mnist_data = mnist_data[:1000]
 
     t0 = time.time()
 
@@ -171,6 +172,7 @@ def main():
 
     t1 = time.time()
     print("Time taken: " + str(t1 - t0) + " Seconds")
+
 
 if __name__ == "__main__":
     main()
