@@ -34,7 +34,7 @@ def read_mnist(dataset = "training", path = "../../../data/"):
         magic, num, rows, cols = struct.unpack(">IIII", fimg.read(16))
         img = np.fromfile(fimg, dtype=np.uint8).reshape(len(lbl), rows, cols)
 
-    get_img = lambda idx: (lbl[idx], img[idx])
+    get_img = lambda idx: (str(lbl[idx]), img[idx])
 
     # Create an iterator which returns each image in turn
     images = [get_img(i) for i in range(len(lbl))]

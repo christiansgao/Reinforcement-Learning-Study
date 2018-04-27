@@ -20,49 +20,51 @@ class HBaseManager:
     BATCH_SIZE = 1000
     FAMILY_NAME = "data"
 
-    def __init__(self):
-        self.connection = happybase.Connection(self.HOST, self.PORT)
+    def __init__(self, connection_pool: happybase.ConnectionPool):
+        self.connection_pool = connection_pool
 
     def create_table(self, table_name: str, delete=True):
-        tables = self.connection.tables()
-        table_names = [table.decode("utf-8") for table in tables]
-        if table_name not in table_names:
-            print("### Creating table: {0} ###".format(table_name))
-            self.connection.create_table(table_name, {self.FAMILY_NAME: dict()})
-        elif delete:
-            print("### Deleting and Creating table {0} ###".format(table_name))
-            self.connection.delete_table(table_name, disable=True)
-            self.connection.create_table(table_name, {self.FAMILY_NAME: dict()})
-        else:
-            print("### Table Exists: {0} ###".format(table_name))
+
+        with self.connection_pool.connection() as connection:
+            tables = connection.tables()
+            table_names = [table.decode("utf-8") for table in tables]
+            if table_name not in table_names:
+                print("### Creating table: {0} ###".format(table_name))
+                connection.create_table(table_name, {self.FAMILY_NAME: dict()})
+            elif delete:
+                print("### Deleting and Creating table {0} ###".format(table_name))
+                connection.delete_table(table_name, disable=True)
+                connection.create_table(table_name, {self.FAMILY_NAME: dict()})
+            else:
+                print("### Table Exists: {0} ###".format(table_name))
 
     def batch_insert(self, table_name, batch_inserts):
         '''
         :type batch_inserts: list of HBaseRow
         :rtype: boolean
         '''
+        with self.connection_pool.connection() as connection:
+            table = connection.table(table_name)
 
-        table = self.connection.table(table_name)
+            try:
+                with table.batch(batch_size=self.BATCH_SIZE) as b:
+                    for row in batch_inserts:
+                        b.put(row.row_key, row.row_values)
+            except ValueError:
+                print("HBase Batch Insert Failed!")
+                return False
 
-        try:
-            with table.batch(batch_size=self.BATCH_SIZE) as b:
-                for row in batch_inserts:
-                    b.put(row.row_key, row.row_values)
-        except ValueError:
-            print("HBase Batch Insert Failed!")
-            return False
-
-        return True
+            return True
 
     def batch_get_rows(self, table_name: str, row_keys: list):
         '''
         :rtype: list of HBaseRow
         '''
-
-        table = self.connection.table(table_name)
-        rows = table.rows(row_keys)
-        hbase_rows = [HBaseRow(key.decode("utf-8"), self.convert_byte_to_utf(row_values)) for key, row_values in rows]
-        return hbase_rows
+        with self.connection_pool.connection() as connection:
+            table = connection.table(table_name)
+            rows = table.rows(row_keys)
+            hbase_rows = [HBaseRow(key.decode("utf-8"), self.convert_byte_to_utf(row_values)) for key, row_values in rows]
+            return hbase_rows
 
     def convert_byte_to_utf(self, row_values: dict):
         converted_row = {k.decode("utf-8"): v.decode("utf-8") for k, v in row_values.items()}
@@ -70,7 +72,8 @@ class HBaseManager:
 
 
 def main():
-    hbase_manager = HBaseManager()
+    pool = happybase.ConnectionPool(size=3, host=HBaseManager.HOST, port=HBaseManager.PORT )
+    hbase_manager = HBaseManager(pool)
     table_name = "test_table"
     insert_rows = [HBaseRow("key1", {"col1": "field1", "col2": "field2"}, family_name=HBaseManager.FAMILY_NAME),
                    HBaseRow("key2", {"col1": "field1", "col2": "field2"}, family_name=HBaseManager.FAMILY_NAME)]
