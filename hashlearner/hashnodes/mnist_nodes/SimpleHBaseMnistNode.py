@@ -9,6 +9,7 @@ import random
 
 from hashlearner.hashnodes.HashNode import HashNode
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
+from hbase.HBaseManager import HBaseManager, HBaseRow
 
 
 class SimpleMnistNode(HashNode):
@@ -21,14 +22,19 @@ class SimpleMnistNode(HashNode):
     CONVOLVE_SHAPE = (10, 10)
     DOWN_SCALE_RATIO = .5
     BINARIZE_THRESHOLD = 80
-    ALL_DIGITS = [0,1,2,3,4,5,6,7,8,9]
+    ALL_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    TABLE_NAME = "Simple-Mnist-Node-1"
 
     def __init__(self, predictor_indexs, response_index):
         super().__init__(predictor_indexs, response_index)
         manager = Manager()
 
-        self.predictions_map = manager.dict()
+        self.hbase_manager = HBaseManager()
         self.response_set = ""
+        self.setup()
+
+    def setup(self):
+        self.hbase_manager.create_table(table_name=self.TABLE_NAME, delete=True)
 
     def train_node(self, mnist_data, deviate=True):
         '''
@@ -54,10 +60,12 @@ class SimpleMnistNode(HashNode):
         print("final map size:" + str(len(self.predictions_map)))
 
     def add_to_predictions(self, mnist_image: np.ndarray, number: int, j: int):
+
         hash_keys = self.extract_keys(mnist_image)
-        pred_map = dict([(hash_key, number) for hash_key in hash_keys])
-        self.predictions_map.update(pred_map)
-        print("trained keys for image: " + str(j))
+        batch_insert_rows = [HBaseRow(row_key=hash_key, row_values={"number": number}, family_name=HBaseManager.FAMILY_NAME) for hash_key in hash_keys]
+        status = self.hbase_manager.batch_insert(self.TABLE_NAME, batch_insert_rows)
+
+        print("trained keys for image {0} with status: {1} ".format(str(j),str(status)))
 
     def extract_keys(self, mnist_image: np.ndarray):
 
@@ -71,16 +79,12 @@ class SimpleMnistNode(HashNode):
         useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
         positioned_keys = [str(position) + "-" + key for key, position in useful_features]
 
-        # hash_object = hashlib.sha1(bytes(key,'utf8'))
-        # hex_dig = hash_object.hexdigest()
-        # hash_key = str(i) + hex_dig
-
         return positioned_keys
 
     def extract_key(self, row):
         pass
 
-    def predict(self, key):
+    def predict(self, keys):
         '''
         :type key: str
         :return: str
@@ -105,7 +109,7 @@ class SimpleMnistNode(HashNode):
             print("no collision predictions")
             return random.choice(self.ALL_DIGITS)
 
-        best_prediction = max(hashed_predictions,key=hashed_predictions.count)
+        best_prediction = max(hashed_predictions, key=hashed_predictions.count)
 
         print("Collision Found! Returning Prediction")
 
@@ -118,7 +122,6 @@ class SimpleMnistNode(HashNode):
         pool.join()
         predictions = [result.get() for result in results]
         return predictions
-
 
     def __str__(self):
         return self.predictions_map.__str__()
