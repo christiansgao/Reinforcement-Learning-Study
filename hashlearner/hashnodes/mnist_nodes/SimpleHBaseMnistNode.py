@@ -63,8 +63,8 @@ class SimpleMnistNode(HashNode):
 
         t0 = time.time()
 
-        store_hash_args = zip(extracted_keys, numbers, itertools.repeat(hbase_manager, n), indexs)
-        [self.store_hash_values(k,n,h,i) for k,n,h,i in store_hash_args]
+        store_hash_args = zip(extracted_keys, numbers, indexs)
+        [self.store_hash_values(k,n,hbase_manager,i) for k,n,i in store_hash_args]
         #hash_store_process = thread_pool.starmap_async(self.store_hash_values, store_hash_args)
         #hash_store_status = hash_store_process.get()
 
@@ -102,7 +102,7 @@ class SimpleMnistNode(HashNode):
             for hash_key in hash_keys
         ]
         status = hbase_manager.batch_insert(self.TABLE_NAME, batch_insert_rows)
-        print("trained keys for image {0} with status: {1} ".format(str(index), str(status)))
+        #print("trained keys for image {0} with status: {1} ".format(str(index), str(status)))
         return True
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
@@ -116,7 +116,7 @@ class SimpleMnistNode(HashNode):
         useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
         positioned_keys = [str(position) + "-" + key for key, position in useful_features]
 
-        print("extracted key from image: " + str(index))
+        #print("extracted key from image: " + str(index))
         return positioned_keys
 
     def extract_key(self, row):
@@ -136,11 +136,11 @@ class SimpleMnistNode(HashNode):
         batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
 
         predictions = [self.predict_from_image_batch(batch) for batch in batches]
-        flat_predictions = list(itertools.chain(*predictions))
+        flat_predictions = list(itertools.chain.from_iterable(predictions))
 
-        return predictions
+        return flat_predictions
 
-        print("Predicting for Mnist Data Finished")
+        #print("Predicting for Mnist Data Finished")
 
     def predict_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
         print("predicting image: " + str(index))
@@ -157,7 +157,7 @@ class SimpleMnistNode(HashNode):
 
         best_prediction = max(hashed_predictions, key=hashed_predictions.count)
 
-        print("Collision Found! Returning Prediction")
+        #print("Collision Found! Returning Prediction")
 
         return best_prediction
 
@@ -176,12 +176,12 @@ class SimpleMnistNode(HashNode):
         extracted_keys = extract_process.get()
 
         t0 = time.time()
-        predict_hash_args = zip(extracted_keys, itertools.repeat(hbase_manager, n), indexs)
+        predict_hash_args = zip(extracted_keys, indexs)
         '''
         hash_store_process = thread_pool.starmap_async(self.predict_hash_values, predict_hash_args)
         predictions = hash_store_process.get()'''
 
-        predictions = [self.predict_hash_values(keys,manager,i) for keys,manager,i in predict_hash_args]
+        predictions = [self.predict_hash_values(keys,hbase_manager,i) for keys,i in predict_hash_args]
 
         process_pool.close()
         thread_pool.close()
@@ -199,7 +199,7 @@ class SimpleMnistNode(HashNode):
 
 def main():
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:100]
+    mnist_data = mnist_data[:1000]
 
     t0 = time.time()
 
