@@ -31,3 +31,11 @@ def binarize_image(image: np.ndarray, threshold: int):
 def binarize_images(images: list, threshold: int):
     binarized_images = [binarize_image(image, threshold) for image in images]
     return binarized_images
+
+def _batch(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
+
+def batch(iterable, n=1):
+        return list(_batch(iterable, n))
