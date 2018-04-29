@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
-from skimage.transform import rescale, resize, downscale_local_mean
+import warnings
+from skimage.transform import rescale
 
 
 def convolve(image=None, kernel_dim=(3, 3)):
@@ -20,7 +21,8 @@ def down_scale_images(images: list, ratio: float):
     return images_rescaled
 
 def down_scale_image(image: np.ndarray, ratio: int):
-    return rescale(image, ratio, preserve_range = True)
+    with warnings.catch_warnings(record=True) as w:
+        return rescale(image, ratio, preserve_range = True)
 
 def binarize_image(image: np.ndarray, threshold: int):
     binarized_image = image.copy()

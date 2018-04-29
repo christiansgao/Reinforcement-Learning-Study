@@ -1,19 +1,18 @@
+import itertools
+import random
 import re
 import time
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
+
 import numpy as np
 import sklearn.metrics as sk_metrics
 import sklearn.model_selection as sk_model
-import random
+from happybase import ConnectionPool
 
 from hashlearner.hashnodes.HashNode import HashNode
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 from hbase.HBaseManager import HBaseManager, HBaseRow
-from happybase import ConnectionPool
-import itertools
-import _thread
-from concurrent.futures import ThreadPoolExecutor
 
 
 class SimpleMnistNode(HashNode):
@@ -28,7 +27,7 @@ class SimpleMnistNode(HashNode):
     BINARIZE_THRESHOLD = 80
     ALL_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     TABLE_NAME = "Simple-Mnist-Node-1"
-    BATCH_SIZE = 100
+    BATCH_SIZE = 10
     POOL_SIZE = 10
     CONNECTION_POOL_SIZE = 100
     COLUMN_NAME = "number"
@@ -41,12 +40,16 @@ class SimpleMnistNode(HashNode):
         HBaseManager(ConnectionPool(size=1, host=HBaseManager.HOST, port=HBaseManager.PORT)).create_table(
             table_name=self.TABLE_NAME, delete=True)
 
-    def train_batch(self, mnist_batch):
+    def train_batch(self, mnist_batch, index):
         '''
-                :type mnist_batch: list of tuple
-                :type deviate: boolean
-                :rtype: None
-                '''
+        :type mnist_batch: list of tuple
+        :type deviate: boolean
+        :rtype: None
+        '''
+        print("Training Batch {}".format(str(index)))
+
+        t0 = time.time()
+
         connection_pool = ConnectionPool(size=self.CONNECTION_POOL_SIZE, host=HBaseManager.HOST, port=HBaseManager.PORT)
         hbase_manager = HBaseManager(connection_pool)
 
@@ -61,36 +64,28 @@ class SimpleMnistNode(HashNode):
         extract_process = process_pool.starmap_async(self.extract_keys, zip(mnist_images, indexs))
         extracted_keys = extract_process.get()
 
-        t0 = time.time()
-
         store_hash_args = zip(extracted_keys, numbers, indexs)
-        [self.store_hash_values(k,n,hbase_manager,i) for k,n,i in store_hash_args]
-        #hash_store_process = thread_pool.starmap_async(self.store_hash_values, store_hash_args)
-        #hash_store_status = hash_store_process.get()
+        [self.store_hash_values(k, n, hbase_manager, i) for k, n, i in store_hash_args]
 
         process_pool.close()
         thread_pool.close()
 
         t1 = time.time()
-        print("Time taken hash: " + str(t1 - t0) + " Seconds")
+        print("Time taken tto train batch: " + str(t1 - t0) + " Seconds")
 
         print("Training for Mnist Batch Finished")
 
-    def train_node(self, mnist_data, deviate=True):
+    def train_node(self, mnist_data):
         '''
         :type mnist_data: list of tuple
         :type deviate: boolean
         :rtype: None
         '''
 
-        print("Starting Training for mnist data")
-
         batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
-        process_pool = Pool(self.POOL_SIZE)
+        indexs = list(range(len(batches)))
 
-        [self.train_batch(batch) for batch in batches]
-
-        process_pool.close()
+        [self.train_batch(batch, index) for batch, index in zip(batches, indexs)]
 
         print("Training for Mnist Data Finished")
 
@@ -102,7 +97,7 @@ class SimpleMnistNode(HashNode):
             for hash_key in hash_keys
         ]
         status = hbase_manager.batch_insert(self.TABLE_NAME, batch_insert_rows)
-        #print("trained keys for image {0} with status: {1} ".format(str(index), str(status)))
+        # print("trained keys for image {0} with status: {1} ".format(str(index), str(status)))
         return True
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
@@ -116,7 +111,7 @@ class SimpleMnistNode(HashNode):
         useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
         positioned_keys = [str(position) + "-" + key for key, position in useful_features]
 
-        #print("extracted key from image: " + str(index))
+        # print("extracted key from image: " + str(index))
         return positioned_keys
 
     def extract_key(self, row):
@@ -131,16 +126,16 @@ class SimpleMnistNode(HashNode):
         pass
 
     def predict_from_images(self, mnist_data):
-        print("Starting Predicting for mnist data")
+        print("Starting Predicting for Mnist data")
 
         batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
 
-        predictions = [self.predict_from_image_batch(batch) for batch in batches]
+        indexs = list(range(len(batches)))
+        predictions = [self.predict_from_image_batch(batch, index) for batch, index in zip(batches, indexs)]
         flat_predictions = list(itertools.chain.from_iterable(predictions))
 
+        print("Predicting for Mnist Data Finished")
         return flat_predictions
-
-        #print("Predicting for Mnist Data Finished")
 
     def predict_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
         print("predicting image: " + str(index))
@@ -157,12 +152,13 @@ class SimpleMnistNode(HashNode):
 
         best_prediction = max(hashed_predictions, key=hashed_predictions.count)
 
-        #print("Collision Found! Returning Prediction")
-
         return best_prediction
 
-    def predict_from_image_batch(self, mnist_batch):
+    def predict_from_image_batch(self, mnist_batch, index):
 
+        print("Predicting Batch {}".format(str(index)))
+
+        t0 = time.time()
         connection_pool = ConnectionPool(size=self.CONNECTION_POOL_SIZE, host=HBaseManager.HOST, port=HBaseManager.PORT)
         hbase_manager = HBaseManager(connection_pool)
 
@@ -175,21 +171,15 @@ class SimpleMnistNode(HashNode):
         extract_process = process_pool.starmap_async(self.extract_keys, zip(mnist_batch, indexs))
         extracted_keys = extract_process.get()
 
-        t0 = time.time()
         predict_hash_args = zip(extracted_keys, indexs)
-        '''
-        hash_store_process = thread_pool.starmap_async(self.predict_hash_values, predict_hash_args)
-        predictions = hash_store_process.get()'''
 
-        predictions = [self.predict_hash_values(keys,hbase_manager,i) for keys,i in predict_hash_args]
+        predictions = [self.predict_hash_values(keys, hbase_manager, i) for keys, i in predict_hash_args]
 
         process_pool.close()
         thread_pool.close()
 
         t1 = time.time()
-        print("Time taken hash: " + str(t1 - t0) + " Seconds")
-
-        print("Predicting for Mnist Batch Finished")
+        print("Mnist Batch {} trained with: {} Seconds".format(str(index), str(t1 - t0)))
 
         return predictions
 
@@ -199,7 +189,7 @@ class SimpleMnistNode(HashNode):
 
 def main():
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:1000]
+    mnist_data = mnist_data[:100]
 
     t0 = time.time()
 
@@ -225,7 +215,7 @@ def main():
     print("Average Success Rate is: " + str(success_rate))
 
     t1 = time.time()
-    print("Time taken: " + str(t1 - t0) + " Seconds")
+    print("Total Time taken: " + str(t1 - t0) + " Seconds")
 
 
 if __name__ == "__main__":
