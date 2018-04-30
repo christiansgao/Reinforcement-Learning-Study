@@ -7,11 +7,11 @@ import sklearn.metrics as sk_metrics
 import sklearn.model_selection as sk_model
 import random
 
-from hashlearner.hashnodes.HashNode import HashNode
+from hashlearner.mnistnodes import MnistNode
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 
 
-class SimpleMnistNode(HashNode):
+class SimpleMnistNode(MnistNode):
     '''
     Simple Hash node
     '''
