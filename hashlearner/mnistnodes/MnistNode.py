@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class HashNode(ABC):
+class MnistNode(ABC):
 
     DEFAULT_DECIMAL_PRECISION = 1 # precision to 1 decimal point
 
@@ -30,5 +30,5 @@ class HashNode(ABC):
         pass
 
     @abstractmethod
-    def predict(self, key):
+    def predict_from_images(self, key):
         pass

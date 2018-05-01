@@ -10,12 +10,13 @@ import sklearn.metrics as sk_metrics
 import sklearn.model_selection as sk_model
 from happybase import ConnectionPool
 
-from hashlearner.hashnodes.HashNode import HashNode
+from hashlearner.mnistnodes.MnistNode import MnistNode
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 from hbase.HBaseManager import HBaseManager, HBaseRow
+from hashlearner.mnistmodel.MnistModel import MnistModel
 
 
-class SimpleMnistNode(HashNode):
+class SimpleHBaseMnistNode(MnistNode):
     '''
     Simple Hash node
     '''
@@ -25,7 +26,7 @@ class SimpleMnistNode(HashNode):
     CONVOLVE_SHAPE = (10, 10)
     DOWN_SCALE_RATIO = .5
     BINARIZE_THRESHOLD = 80
-    ALL_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    ALL_DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     TABLE_NAME = "Simple-Mnist-Node-1"
     BATCH_SIZE = 10
     POOL_SIZE = 10
@@ -57,8 +58,8 @@ class SimpleMnistNode(HashNode):
         thread_pool = ThreadPool(self.POOL_SIZE)
         n = len(mnist_batch)
 
-        numbers = [mnist_obs[0] for mnist_obs in mnist_batch]
-        mnist_images = [mnist_obs[1] for mnist_obs in mnist_batch]
+        numbers = [mnist_obs[MnistModel.RESPONSE_INDEX] for mnist_obs in mnist_batch]
+        mnist_images = [mnist_obs[MnistModel.PREDICTOR_INDEX] for mnist_obs in mnist_batch]
         indexs = list(range(n))
 
         extract_process = process_pool.starmap_async(self.extract_keys, zip(mnist_images, indexs))
@@ -163,7 +164,7 @@ class SimpleMnistNode(HashNode):
         hbase_manager = HBaseManager(connection_pool)
 
         process_pool = Pool(self.POOL_SIZE)
-        thread_pool = ThreadPool(self.POOL_SIZE)
+        #thread_pool = ThreadPool(self.POOL_SIZE)
         n = len(mnist_batch)
 
         indexs = list(range(n))
@@ -176,7 +177,7 @@ class SimpleMnistNode(HashNode):
         predictions = [self.predict_hash_values(keys, hbase_manager, i) for keys, i in predict_hash_args]
 
         process_pool.close()
-        thread_pool.close()
+        #thread_pool.close()
 
         t1 = time.time()
         print("Mnist Batch {} trained with: {} Seconds".format(str(index), str(t1 - t0)))
@@ -195,7 +196,7 @@ def main():
 
     train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
 
-    mnist_node = SimpleMnistNode(predictor_indexs=[1], response_index=0)
+    mnist_node = SimpleHBaseMnistNode(predictor_indexs=[1], response_index=0)
     status = mnist_node.train_node(train)
     print("training status: " + str(status))
 

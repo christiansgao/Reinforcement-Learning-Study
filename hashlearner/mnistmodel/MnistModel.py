@@ -11,7 +11,7 @@ class MnistModel(ABC):
     RESPONSE_INDEX = 0
     PREDICTOR_INDEX = 1
 
-    def __init__(self, data, response_indexs, predictor_indexes):
+    def __init__(self):
         '''
         :type data: DataFrame
         :type predictor_indexes: list
@@ -19,8 +19,7 @@ class MnistModel(ABC):
         :type response_indexs: list
         '''
 
-        self.data = data
-        self.hash_node_list: array[MnistNode] = []
+        self.mnist_node_list: array[MnistNode] = [] #type: list of
 
         super().__init__()
 
@@ -29,5 +28,5 @@ class MnistModel(ABC):
         pass
 
     @abstractmethod
-    def predict_match(self, row):
+    def predict_from_images(self, images):
         pass
