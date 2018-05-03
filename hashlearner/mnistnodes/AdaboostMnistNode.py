@@ -16,7 +16,7 @@ from hbase.HBaseManager import HBaseManager, HBaseRow
 from hashlearner.mnistmodel.MnistModel import MnistModel
 
 
-class SimpleHBaseMnistNode(MnistNode):
+class AdaboostMnistNode(MnistNode):
     '''
     Simple Hash node
     '''
@@ -33,17 +33,18 @@ class SimpleHBaseMnistNode(MnistNode):
     CONNECTION_POOL_SIZE = 100
     COLUMN_NAME = "number"
 
-    def __init__(self, setup_table = False, convolve_shape = CONVOLVE_SHAPE, down_scale_ratio = DOWN_SCALE_RATIO, binarize_threshold = BINARIZE_THRESHOLD):
+    def __init__(self, alpha_weight = 1, setup_table=False, convolve_shape=CONVOLVE_SHAPE,
+                 down_scale_ratio=DOWN_SCALE_RATIO, binarize_threshold=BINARIZE_THRESHOLD):
         super().__init__()
 
         self.binarize_threshold = binarize_threshold
         self.convolve_shape = convolve_shape
         self.down_scale_ratio = down_scale_ratio
+        self.beta_weight = alpha_weight
         if setup_table:
             self.setup()
 
-    def __str__(self):
-        return "Convolve Shape: {}, Down Scale Ratio: {}, "
+        self.cached_predictions = []
 
     def setup(self):
         HBaseManager(ConnectionPool(size=1, host=HBaseManager.HOST, port=HBaseManager.PORT)).create_table(
@@ -123,9 +124,11 @@ class SimpleHBaseMnistNode(MnistNode):
         # print("extracted key from image: " + str(index))
         return positioned_keys
 
-
     def predict_from_images(self, mnist_data):
         print("Starting Predicting for Mnist data")
+
+        if self.cached_predictions:
+            return self.cached_predictions
 
         batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
 
@@ -134,10 +137,13 @@ class SimpleHBaseMnistNode(MnistNode):
         flat_predictions = list(itertools.chain.from_iterable(predictions))
 
         print("Predicting for Mnist Data Finished")
+
+        self.cached_predictions = flat_predictions
+
         return flat_predictions
 
     def predict_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
-        #print("predicting image: " + str(index))
+        # print("predicting image: " + str(index))
 
         if len(hash_keys) == 0:
             print("no good hash keys")
@@ -162,7 +168,6 @@ class SimpleHBaseMnistNode(MnistNode):
         hbase_manager = HBaseManager(connection_pool)
 
         process_pool = Pool(self.POOL_SIZE)
-        #thread_pool = ThreadPool(self.POOL_SIZE)
         n = len(mnist_batch)
 
         indexs = list(range(n))
@@ -175,12 +180,14 @@ class SimpleHBaseMnistNode(MnistNode):
         predictions = [self.predict_hash_values(keys, hbase_manager, i) for keys, i in predict_hash_args]
 
         process_pool.close()
-        #thread_pool.close()
 
         t1 = time.time()
         print("Mnist Batch {} predicted in: {} Seconds".format(str(index), str(t1 - t0)))
 
         return predictions
+
+    def __str__(self):
+        return self.predictions_map.__str__()
 
 
 def main():
@@ -189,9 +196,9 @@ def main():
 
     t0 = time.time()
 
-    train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
+    train, test = sk_model.train_test_split(mnist_data, test_size=0.2)
 
-    mnist_node = SimpleHBaseMnistNode()
+    mnist_node = AdaboostMnistNode(setup_table=True, convolve_shape= (10,10))
     status = mnist_node.train_node(train)
     print("training status: " + str(status))
 
@@ -200,6 +207,8 @@ def main():
     print("Starting predictions")
 
     predictions = mnist_node.predict_from_images(test_images)
+    predictions = mnist_node.predict_from_images(test_images)
+
     confusion_matrix = sk_metrics.confusion_matrix(y_true=true_numbers, y_pred=predictions)
 
     correct_classifications = np.diagonal(confusion_matrix);

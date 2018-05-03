@@ -19,7 +19,7 @@ class MnistModel(ABC):
         :type response_indexs: list
         '''
 
-        self.mnist_node_list: array[MnistNode] = [] #type: list of
+        self.mnist_node_list = [] #type: list of MnistNode
 
         super().__init__()
 

@@ -4,12 +4,14 @@ import numpy as np
 import pandas
 import sklearn.metrics as sk_metrics
 import sklearn.model_selection as sk_model
+import array
+import itertools
+
 
 from hashlearner.mnistmodel.MnistModel import MnistModel
 from hashlearner.mnistnodes.MnistNode import MnistNode
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 from hashlearner.mnistnodes.SimpleHBaseMnistNode import SimpleHBaseMnistNode
-import os
 
 
 class HBaseMnistModel(MnistModel):
@@ -22,60 +24,85 @@ class HBaseMnistModel(MnistModel):
         '''
         super().__init__()
 
-    def initializes_model(self):
-
-        self.mnist_node_list.append()
-
-    def train_model(self):
-
         self.initializes_model()
 
-        for hash_node in self.mnist_node_list:
-            hash_node.train_node(data=self.data)
+    def initializes_model(self):
 
-    def predict_from_image_batch(self, images):
+        #SimpleHBaseMnistNode().setup()
+
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="1",convolve_shape=(6,6), binarize_threshold=80))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="2",convolve_shape=(7,7), binarize_threshold=80))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="3",convolve_shape=(8,8), binarize_threshold=80))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="4",convolve_shape=(9,9), binarize_threshold=80))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="5",convolve_shape=(10,10), binarize_threshold=80))
+
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="6",convolve_shape=(6, 6), binarize_threshold=100))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="7",convolve_shape=(7, 7), binarize_threshold=100))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="8",convolve_shape=(8, 8), binarize_threshold=100))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="9",convolve_shape=(9, 9), binarize_threshold=100))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="10",convolve_shape=(10, 10), binarize_threshold=100))
+
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="11",convolve_shape=(6, 6), binarize_threshold=90, down_scale_ratio= .7))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="12",convolve_shape=(7, 7), binarize_threshold=90, down_scale_ratio= .7))
+        #self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="13",convolve_shape=(8, 8), binarize_threshold=90, down_scale_ratio= .7))
+        #self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="14",convolve_shape=(9, 9), binarize_threshold=90, down_scale_ratio= .7))
+        #self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="15",convolve_shape=(10, 10), binarize_threshold=90, down_scale_ratio= .7))
+
+
+    def train_model(self, mnist_data):
+
+        index = 1
+        for hash_node in self.mnist_node_list: #type: MnistNode
+            print("####### Training Node Number: {} #######".format(str(index)))
+            hash_node.train_node(mnist_data)
+            index += 1
+
+    def predict_from_images(self, images):
         '''
         :type images: pandas.DataFrame
         :rtype: list
         '''
 
-        predictions = []
-        for row in images.iterrows():
-            candidates = {}
-            # Make prediction from each model
-            for mnistNode in self.mnist_node_list: #type: MnistNode
-                extracted_row = mnistNode.extract_key(row)
-                prediction = mnistNode.predict_from_images(images)
-                if prediction == None:
-                    raise Exception("Prediction == None!")
-                if not prediction in candidates:
-                    candidates[prediction] = 1
+        final_predictions = []
+        candidates = [{} for _ in range(len(images))]
+
+        for mnistNode in self.mnist_node_list: #type: MnistNode
+            print("########## Extracting Predictions for Node: {} ##########".format(mnistNode.node_name))
+            predictions = mnistNode.predict_from_images(images)
+
+            for prediction, candidate in zip(predictions, candidates):
+                if not prediction in candidate:
+                    candidate[prediction] = 1
                 else:
-                    candidates[prediction] += 1
+                    candidate[prediction] += 1
 
-            prediction = max(candidates, key=candidates.get) if len(candidates) != 0 else np.random.choice(self.response_set)
-            predictions.append(prediction)
+        for candidate in candidates:
+            final_prediction = max(candidate, key=candidate.get) if len(candidates) != 0 else np.random.choice(self.response_set)
+            final_predictions.append(final_prediction)
 
-        return predictions
+        return final_predictions
 
 
 def main():
+
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:100]
+    mnist_data = mnist_data[:10000]
 
     t0 = time.time()
 
     train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
+    train = mnist_data[:9000]
+    test = mnist_data[9000:]
 
-    mnist_node = HBaseMnistModel(predictor_indexs=[1], response_index=0)
-    status = mnist_node.train_node(train)
-    print("training status: " + str(status))
+    mnist_model = HBaseMnistModel()
+    #status = mnist_model.train_model(train)
+    #print("training status: " + str(status))
 
-    true_numbers = [image[0] for image in test]
-    test_images = [image[1] for image in test]
+    true_numbers = [image[MnistModel.RESPONSE_INDEX] for image in test]
+    test_images = [image[MnistModel.PREDICTOR_INDEX] for image in test]
     print("Starting predictions")
 
-    predictions = mnist_node.predict_from_images(test_images)
+    predictions = mnist_model.predict_from_images(test_images)
     confusion_matrix = sk_metrics.confusion_matrix(y_true=true_numbers, y_pred=predictions)
 
     correct_classifications = np.diagonal(confusion_matrix);

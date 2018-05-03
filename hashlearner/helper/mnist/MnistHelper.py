@@ -41,3 +41,6 @@ def _batch(iterable, n=1):
 
 def batch(iterable, n=1):
         return list(_batch(iterable, n))
+
+def rank_nodes(nodes, training_set, test_set, n=1):
+    pass
