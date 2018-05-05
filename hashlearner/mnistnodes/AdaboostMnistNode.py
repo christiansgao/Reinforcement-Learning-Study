@@ -46,9 +46,6 @@ class AdaboostMnistNode(MnistNode):
 
         self.cached_predictions = []
 
-    def setup(self):
-        HBaseManager(ConnectionPool(size=1, host=HBaseManager.HOST, port=HBaseManager.PORT)).create_table(
-            table_name=self.TABLE_NAME, delete=True)
 
     def train_batch(self, mnist_batch, index):
         '''
@@ -85,22 +82,6 @@ class AdaboostMnistNode(MnistNode):
 
         print("Training for Mnist Batch Finished")
 
-    def train_node(self, mnist_data):
-        '''
-        :type mnist_data: list of tuple
-        :type deviate: boolean
-        :rtype: None
-        '''
-
-        batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
-        indexs = list(range(len(batches)))
-
-        [self.train_batch(batch, index) for batch, index in zip(batches, indexs)]
-
-        print("Training for Mnist Data Finished")
-
-        return True
-
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
 
@@ -115,43 +96,7 @@ class AdaboostMnistNode(MnistNode):
         positioned_shaped_keys = [ "{}-{}-{}-{}".format(str(position),self.convolve_shape[0], self.convolve_shape[1],key)
                                    for key, position in useful_features]
 
-        # print("extracted key from image: " + str(index))
         return positioned_shaped_keys
-
-    def predict_from_images(self, mnist_data):
-        print("Starting Predicting for Mnist data")
-
-        if self.cached_predictions:
-            return self.cached_predictions
-
-        batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
-
-        indexs = list(range(len(batches)))
-        predictions = [self.predict_from_image_batch(batch, index) for batch, index in zip(batches, indexs)]
-        flat_predictions = list(itertools.chain.from_iterable(predictions))
-
-        print("Predicting for Mnist Data Finished")
-
-        self.cached_predictions = flat_predictions
-
-        return flat_predictions
-
-    def predict_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
-        # print("predicting image: " + str(index))
-
-        if len(hash_keys) == 0:
-            print("no good hash keys")
-            return random.choice(self.ALL_DIGITS)
-
-        hash_rows = hbase_manager.batch_get_rows(self.TABLE_NAME, hash_keys)
-        hashed_predictions = [hash_row.row_values[self.COLUMN_NAME] for hash_row in hash_rows]
-        if len(hashed_predictions) == 0:
-            print("no collision predictions")
-            return random.choice(self.ALL_DIGITS)
-
-        best_prediction = max(hashed_predictions, key=hashed_predictions.count)
-
-        return best_prediction
 
     def predict_from_image_batch(self, mnist_batch, index):
 
@@ -186,7 +131,7 @@ class AdaboostMnistNode(MnistNode):
 
 def main():
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:200]
+    mnist_data = mnist_data[:100]
 
     t0 = time.time()
 
