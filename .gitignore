@@ -2,4 +2,4 @@ data/
 .idea
 *.pyc
 .DS_Store
-*.Rhistory
+node_test_data/.Rhistory

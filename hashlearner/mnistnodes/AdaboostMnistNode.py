@@ -27,7 +27,7 @@ class AdaboostMnistNode(MnistNode):
     DOWN_SCALE_RATIO = .5
     BINARIZE_THRESHOLD = 80
     ALL_DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    TABLE_NAME = "Simple-Mnist-Node-1"
+    TABLE_NAME = "Adaboost-Mnist-Node-1"
     BATCH_SIZE = 1000
     POOL_SIZE = 10
     CONNECTION_POOL_SIZE = 300
@@ -101,16 +101,9 @@ class AdaboostMnistNode(MnistNode):
 
         return True
 
-    def store_hash_values(self, hash_keys: list, number: int, hbase_manager: HBaseManager, index: int):
-        batch_insert_rows = [
-            HBaseRow(row_key=hash_key, row_values={self.COLUMN_NAME: number}, family_name=HBaseManager.FAMILY_NAME)
-            for hash_key in hash_keys
-        ]
-        status = hbase_manager.batch_insert(self.TABLE_NAME, batch_insert_rows)
-        # print("trained keys for image {0} with status: {1} ".format(str(index), str(status)))
-        return True
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
+
         convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.convolve_shape)
         images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.down_scale_ratio)
         binarized_images = MnistHelper.binarize_images(images_rescaled, threshold=self.binarize_threshold)
@@ -119,10 +112,11 @@ class AdaboostMnistNode(MnistNode):
         hash_keys = [re.sub("[^0-9]+", "", str(binarized_image)) for binarized_image in binarized_images]
         feature_position_pair = list(zip(hash_keys, feature_positions))
         useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
-        positioned_keys = [str(position) + "-" + key for key, position in useful_features]
+        positioned_shaped_keys = [ "{}-{}-{}-{}".format(str(position),self.convolve_shape[0], self.convolve_shape[1],key)
+                                   for key, position in useful_features]
 
         # print("extracted key from image: " + str(index))
-        return positioned_keys
+        return positioned_shaped_keys
 
     def predict_from_images(self, mnist_data):
         print("Starting Predicting for Mnist data")
