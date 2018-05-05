@@ -28,7 +28,7 @@ class SimpleHBaseMnistNode(MnistNode):
     BINARIZE_THRESHOLD = 80
     ALL_DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     TABLE_NAME = "Simple-Mnist-Node-1"
-    BATCH_SIZE = 100
+    BATCH_SIZE = 300
     POOL_SIZE = 10
     CONNECTION_POOL_SIZE = 100
     COLUMN_NAME = "number"
@@ -43,7 +43,7 @@ class SimpleHBaseMnistNode(MnistNode):
             self.setup()
 
     def __str__(self):
-        return "Convolve Shape: {}, Down Scale Ratio: {}, "
+        return "Convolve Shape: {}, Down Scale Ratio: {}, Binarize Threshold: {}".format(self.convolve_shape, self.down_scale_ratio, self.binarize_threshold)
 
     def setup(self):
         HBaseManager(ConnectionPool(size=1, host=HBaseManager.HOST, port=HBaseManager.PORT)).create_table(

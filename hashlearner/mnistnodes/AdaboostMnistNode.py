@@ -28,9 +28,9 @@ class AdaboostMnistNode(MnistNode):
     BINARIZE_THRESHOLD = 80
     ALL_DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     TABLE_NAME = "Simple-Mnist-Node-1"
-    BATCH_SIZE = 100
+    BATCH_SIZE = 1000
     POOL_SIZE = 10
-    CONNECTION_POOL_SIZE = 100
+    CONNECTION_POOL_SIZE = 300
     COLUMN_NAME = "number"
 
     def __init__(self, alpha_weight = 1, setup_table=False, convolve_shape=CONVOLVE_SHAPE,
@@ -192,7 +192,7 @@ class AdaboostMnistNode(MnistNode):
 
 def main():
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:100]
+    mnist_data = mnist_data[:200]
 
     t0 = time.time()
 
