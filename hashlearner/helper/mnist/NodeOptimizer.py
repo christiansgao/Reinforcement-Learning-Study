@@ -52,7 +52,7 @@ def optimize_simple_nodes(mnist_data):
     parameter_list = list(itertools.product(convolution_set, binarize_threshold, down_scale_ratios))
     log(["success_rate", "convolve_shape_x","convolve_shape_y", "binarize_threshold_x", "binarize_threshold_y", "down_scale_ratio"], ts)
 
-    indexs = list(range(2426, len(parameter_list)))
+    indexs = list(range(2719, len(parameter_list)))
     for i in indexs:
         print("####### Testing Index: {} of {} `#######".format(str(i), str(len(parameter_list))))
         conv = parameter_list[i][0]

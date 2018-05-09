@@ -42,9 +42,6 @@ class SimpleHBaseMnistNode(MnistNode):
         if setup_table:
             self.setup()
 
-    def __str__(self):
-        return "Convolve Shape: {}, Down Scale Ratio: {}, Binarize Threshold: {}".format(self.convolve_shape, self.down_scale_ratio, self.binarize_threshold)
-
     def setup(self):
         HBaseManager(ConnectionPool(size=1, host=HBaseManager.HOST, port=HBaseManager.PORT)).create_table(
             table_name=self.TABLE_NAME, delete=True)
@@ -66,8 +63,8 @@ class SimpleHBaseMnistNode(MnistNode):
         thread_pool = ThreadPool(self.POOL_SIZE)
         n = len(mnist_batch)
 
-        numbers = [mnist_obs[MnistModel.RESPONSE_INDEX] for mnist_obs in mnist_batch]
-        mnist_images = [mnist_obs[MnistModel.PREDICTOR_INDEX] for mnist_obs in mnist_batch]
+        numbers, mnist_images = MnistHelper.extract_numbers_images(mnist_batch)
+
         indexs = list(range(n))
 
         extract_process = process_pool.starmap_async(self.extract_keys, zip(mnist_images, indexs))
@@ -106,7 +103,6 @@ class SimpleHBaseMnistNode(MnistNode):
             for hash_key in hash_keys
         ]
         status = hbase_manager.batch_insert(self.TABLE_NAME, batch_insert_rows)
-        # print("trained keys for image {0} with status: {1} ".format(str(index), str(status)))
         return True
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
@@ -120,12 +116,10 @@ class SimpleHBaseMnistNode(MnistNode):
         useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
         positioned_keys = [str(position) + "-" + key for key, position in useful_features]
 
-        # print("extracted key from image: " + str(index))
         return positioned_keys
 
 
     def predict_from_images(self, mnist_data):
-        print("Starting Predicting for Mnist data")
 
         batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
 
@@ -133,7 +127,6 @@ class SimpleHBaseMnistNode(MnistNode):
         predictions = [self.predict_from_image_batch(batch, index) for batch, index in zip(batches, indexs)]
         flat_predictions = list(itertools.chain.from_iterable(predictions))
 
-        print("Predicting for Mnist Data Finished")
         return flat_predictions
 
     def predict_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
@@ -191,7 +184,7 @@ def main():
 
     train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
 
-    mnist_node = SimpleHBaseMnistNode()
+    mnist_node = SimpleHBaseMnistNode(setup_table=True)
     status = mnist_node.train_node(train)
     print("training status: " + str(status))
 

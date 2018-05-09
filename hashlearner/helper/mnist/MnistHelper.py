@@ -3,6 +3,8 @@ import itertools
 import warnings
 from skimage.transform import rescale
 
+RESPONSE_INDEX = 0
+PREDICTOR_INDEX = 1
 
 def convolve(image=None, kernel_dim=(3, 3)):
     view_shape = tuple(np.subtract(image.shape, kernel_dim) + 1) + kernel_dim
@@ -44,3 +46,8 @@ def batch(iterable, n=1):
 
 def rank_nodes(nodes, training_set, test_set, n=1):
     pass
+
+def extract_numbers_images(mnist_batch):
+    numbers = [mnist_obs[RESPONSE_INDEX] for mnist_obs in mnist_batch]
+    mnist_images = [mnist_obs[PREDICTOR_INDEX] for mnist_obs in mnist_batch]
+    return numbers, mnist_images

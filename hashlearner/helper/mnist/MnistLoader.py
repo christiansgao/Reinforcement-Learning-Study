@@ -7,6 +7,13 @@ Loosely inspired by http://abel.ee.ucla.edu/cvxopt/_downloads/mnist.py
 which is GPL licensed.
 """
 
+class MnistImage:
+
+    def __init__(self, label, image):
+        self.labels = label
+        self.images = image
+
+
 def read_mnist(dataset = "training", path = "../../data/"):
     """
     Python function for importing the MNIST data set.  It returns an iterator
@@ -38,6 +45,17 @@ def read_mnist(dataset = "training", path = "../../data/"):
 
     # Create an iterator which returns each image in turn
     images = [get_img(i) for i in range(len(lbl))]
+    return images
+
+def read_mnist_objs(dataset = "training", path = "../../data/"):
+    '''
+    :type dataset:
+    :type path:
+    :rtype: list of MnistImage
+    '''
+    raw_images = read_mnist(dataset, path)
+    images = [MnistImage(raw_images[0],raw_images[1]) for raw_image in raw_images]
+
     return images
 
 

@@ -28,28 +28,13 @@ class HBaseMnistModel(MnistModel):
 
     def initializes_model(self):
 
-        #SimpleHBaseMnistNode().setup()
-
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="1",convolve_shape=(6,6), binarize_threshold=80))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="2",convolve_shape=(7,7), binarize_threshold=80))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="3",convolve_shape=(8,8), binarize_threshold=80))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="4",convolve_shape=(9,9), binarize_threshold=80))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="5",convolve_shape=(10,10), binarize_threshold=80))
-
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="6",convolve_shape=(6, 6), binarize_threshold=100))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="7",convolve_shape=(7, 7), binarize_threshold=100))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="8",convolve_shape=(8, 8), binarize_threshold=100))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="9",convolve_shape=(9, 9), binarize_threshold=100))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="10",convolve_shape=(10, 10), binarize_threshold=100))
-
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="11",convolve_shape=(6, 6), binarize_threshold=90, down_scale_ratio= .7))
-        self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="12",convolve_shape=(7, 7), binarize_threshold=90, down_scale_ratio= .7))
-        #self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="13",convolve_shape=(8, 8), binarize_threshold=90, down_scale_ratio= .7))
-        #self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="14",convolve_shape=(9, 9), binarize_threshold=90, down_scale_ratio= .7))
-        #self.mnist_node_list.append(SimpleHBaseMnistNode(node_name="15",convolve_shape=(10, 10), binarize_threshold=90, down_scale_ratio= .7))
-
+        self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
+        #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
+        #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
 
     def train_model(self, mnist_data):
+
+        SimpleHBaseMnistNode().setup()
 
         index = 1
         for hash_node in self.mnist_node_list: #type: MnistNode
@@ -66,8 +51,8 @@ class HBaseMnistModel(MnistModel):
         final_predictions = []
         candidates = [{} for _ in range(len(images))]
 
-        for mnistNode in self.mnist_node_list: #type: MnistNode
-            print("########## Extracting Predictions for Node: {} ##########".format(mnistNode.node_name))
+        for mnistNode in self.mnist_node_list: #type: SimpleHBaseMnistNode
+            #print("########## Extracting Predictions for Node: {} ##########".format(mnistNode.node_name))
             predictions = mnistNode.predict_from_images(images)
 
             for prediction, candidate in zip(predictions, candidates):
@@ -80,26 +65,32 @@ class HBaseMnistModel(MnistModel):
             final_prediction = max(candidate, key=candidate.get) if len(candidates) != 0 else np.random.choice(self.response_set)
             final_predictions.append(final_prediction)
 
+
+        print("final candidates: " + str(candidates))
+
         return final_predictions
 
 
 def main():
 
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:10000]
+    mnist_data = mnist_data[:110]
+
 
     t0 = time.time()
 
     train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    train = mnist_data[:9000]
-    test = mnist_data[9000:]
+    train = mnist_data[:100]
+    test = mnist_data[90:]
+    test2 = mnist_data[100:200]
+
 
     mnist_model = HBaseMnistModel()
-    #status = mnist_model.train_model(train)
+    status = mnist_model.train_model(train)
     #print("training status: " + str(status))
 
-    true_numbers = [image[MnistModel.RESPONSE_INDEX] for image in test]
-    test_images = [image[MnistModel.PREDICTOR_INDEX] for image in test]
+    true_numbers, test_images = MnistHelper.extract_numbers_images(test2)
+
     print("Starting predictions")
 
     predictions = mnist_model.predict_from_images(test_images)
