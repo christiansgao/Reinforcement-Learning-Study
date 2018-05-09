@@ -21,7 +21,7 @@ import sys
 
 
 class BoostedMnistModel(MnistModel):
-    def __init__(self, iterations, mnist_data, optimization_len=100, train_test_ratio=.8):
+    def __init__(self, mnist_data, optimization_len=100, train_test_ratio=.8):
         '''
         :type data: DataFrame
         :type predictor_indexes: list
@@ -31,7 +31,6 @@ class BoostedMnistModel(MnistModel):
         super().__init__()
 
         self.initializes_model()
-        self.iterations = iterations
         self.optimization_len = optimization_len
         self.train_test_ratio = train_test_ratio
         self.mnist_data = mnist_data
@@ -43,16 +42,18 @@ class BoostedMnistModel(MnistModel):
         # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
         # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
 
-    def train_model(self):
+    def train_model(self, iterations=1):
+
 
         #train, test = sk_model.train_test_split(self.mnist_data, test_size=0.2)
-        train = self.mnist_data
+        train = self.mnist_data[:20]
+        test = self.mnist_data[100:110]
 
         self.train_nodes(train)
         # shuffle(self.mnist_node_list)
 
         # self.initial_benchmark(test_mnist_data)
-        #self._boost_node(test)
+        self._boost_node(test)
 
     def train_nodes(self, mnist_data):
 
@@ -145,8 +146,7 @@ class BoostedMnistModel(MnistModel):
                     candidate[prediction] += boosted_node.beta_weights[int(prediction)]
 
         for candidate in candidates:
-            final_prediction = max(candidate, key=candidate.get) if len(candidates) != 0 else np.random.choice(
-                self.response_set)
+            final_prediction = max(candidate, key=candidate.get) if len(candidates) != 0 else np.random.choice(self.response_set)
             final_predictions.append(final_prediction)
 
         print("final candidates: " + str(candidates))
@@ -161,19 +161,17 @@ class BoostedMnistModel(MnistModel):
 
 def main():
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:1100]
+    mnist_data = mnist_data[:120]
 
     t0 = time.time()
 
     # train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    train = mnist_data[:10]
-    test = mnist_data[90:100]
-    test2 = mnist_data[100:110]
+    test = mnist_data[100:120]
 
-    mnist_model = BoostedMnistModel(iterations=1, mnist_data=mnist_data)
-    mnist_model.train_model(train, test)
+    mnist_model = BoostedMnistModel(mnist_data=mnist_data)
+    mnist_model.train_model(iterations=1)
 
-    true_numbers, test_images = MnistHelper.extract_numbers_images(test2)
+    true_numbers, test_images = MnistHelper.extract_numbers_images(test)
 
     print("Starting predictions")
 

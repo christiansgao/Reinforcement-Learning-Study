@@ -66,15 +66,17 @@ class MnistNode(ABC):
         batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
 
         indexs = list(range(len(batches)))
-        predictions, probabilities = zip(*[self.predict_from_image_batch(batch, index) for batch, index in
-                                      zip(batches, indexs)])
+        predictions = [self.predict_from_image_batch(batch, index) for batch, index in
+                                      zip(batches, indexs)]
         flat_predictions = list(itertools.chain.from_iterable(predictions))
-        flat_probabilities = list(itertools.chain.from_iterable(probabilities))
 
         self.cached_predictions = flat_predictions
-        self.cached_probabilities = flat_probabilities
 
-        return self.cached_predictions, self.cached_probabilities
+        return self.cached_predictions
+
+    def get_hbase_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
+        hash_rows = hbase_manager.batch_get_rows(self.TABLE_NAME, hash_keys)
+        hashed_predictions = [hash_row.row_values[self.COLUMN_NAME] for hash_row in hash_rows]
 
     def predict_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
 

@@ -25,7 +25,7 @@ class BoostedMnistNode(MnistNode):
     DOWN_SCALE_RATIO = .5
     BINARIZE_THRESHOLD = 80
     TABLE_NAME = "L2Boost-Mnist-Node-1"
-    BATCH_SIZE = 100
+    BATCH_SIZE = 10
     POOL_SIZE = 10
     CONNECTION_POOL_SIZE = 300
     COLUMN_NAME = "number"
@@ -119,7 +119,7 @@ class BoostedMnistNode(MnistNode):
 
         predict_hash_args = zip(extracted_keys, indexs)
 
-        predictions = zip(*[self.predict_hash_values(keys, hbase_manager, i) for keys, i in predict_hash_args])
+        predictions = [self.predict_hash_values(keys, hbase_manager, i) for keys, i in predict_hash_args]
 
         process_pool.close()
 
