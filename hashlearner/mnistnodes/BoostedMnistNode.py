@@ -119,14 +119,14 @@ class BoostedMnistNode(MnistNode):
 
         predict_hash_args = zip(extracted_keys, indexs)
 
-        predictions, probabilities = zip(*[self.predict_hash_values(keys, hbase_manager, i) for keys, i in predict_hash_args])
+        predictions = zip(*[self.predict_hash_values(keys, hbase_manager, i) for keys, i in predict_hash_args])
 
         process_pool.close()
 
         t1 = time.time()
         print("Mnist Batch {} predicted in: {} Seconds".format(str(index), str(t1 - t0)))
 
-        return predictions, probabilities
+        return predictions
 
 
 def main():

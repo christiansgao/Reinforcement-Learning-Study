@@ -80,16 +80,13 @@ def main():
     t0 = time.time()
 
     train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    train = mnist_data[:100]
-    test = mnist_data[90:]
-    test2 = mnist_data[100:200]
-
+    train = mnist_data[:10]
+    test = mnist_data[100:]
 
     mnist_model = HBaseMnistModel()
     status = mnist_model.train_model(train)
-    #print("training status: " + str(status))
 
-    true_numbers, test_images = MnistHelper.extract_numbers_images(test2)
+    true_numbers, test_images = MnistHelper.extract_numbers_images(test)
 
     print("Starting predictions")
 

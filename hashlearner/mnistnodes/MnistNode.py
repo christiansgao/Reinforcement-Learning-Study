@@ -92,11 +92,29 @@ class MnistNode(ABC):
         test = dict((x,hashed_predictions.count(x)) for x in set(hashed_predictions))
 
         best_prediction = max(hashed_predictions, key=hashed_predictions.count)
-        probabilities = self.get_probs_from_predictions(hashed_predictions)
 
-        return best_prediction, probabilities
+        return best_prediction
 
-    def get_probs_from_predictions(self, hashed_predictions):
+    def predict_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
+
+        if len(hash_keys) == 0:
+            print("no good hash keys")
+            return random.choice(self.ALL_DIGITS), self.get_default_probs()
+
+        hash_rows = hbase_manager.batch_get_rows(self.TABLE_NAME, hash_keys)
+        hashed_predictions = [hash_row.row_values[self.COLUMN_NAME] for hash_row in hash_rows]
+
+        if len(hashed_predictions) == 0:
+            print("no collision predictions")
+            return random.choice(self.ALL_DIGITS), self.get_default_probs()
+
+        test = dict((x,hashed_predictions.count(x)) for x in set(hashed_predictions))
+
+        best_prediction = max(hashed_predictions, key=hashed_predictions.count)
+
+        return best_prediction
+
+    def get_hash_probabilities(self, hashed_predictions):
         prediction_count = Counter(hashed_predictions)
         prediction_probs =  {k: v / len(hashed_predictions) for k, v in prediction_count.items()}
         for digit in self.ALL_DIGITS:

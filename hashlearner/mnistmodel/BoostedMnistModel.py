@@ -19,8 +19,9 @@ from random import shuffle
 import sklearn.ensemble.gradient_boosting
 import sys
 
+
 class BoostedMnistModel(MnistModel):
-    def __init__(self, iterations, optimization_len=100, train_test_ratio=.8):
+    def __init__(self, iterations, mnist_data, optimization_len=100, train_test_ratio=.8):
         '''
         :type data: DataFrame
         :type predictor_indexes: list
@@ -33,23 +34,27 @@ class BoostedMnistModel(MnistModel):
         self.iterations = iterations
         self.optimization_len = optimization_len
         self.train_test_ratio = train_test_ratio
+        self.mnist_data = mnist_data
         self.boosted_node_list = []
 
     def initializes_model(self):
 
         self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
-        #self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
-        #self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
+        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
+        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
 
-    def train_model(self, mnist_data, test_mnist_data):
+    def train_model(self):
 
-        self.training_nodes(mnist_data)
-        #shuffle(self.mnist_node_list)
+        #train, test = sk_model.train_test_split(self.mnist_data, test_size=0.2)
+        train = self.mnist_data
 
-        #self.initial_benchmark(test_mnist_data)
-        self._boost_node(test_mnist_data)
+        self.train_nodes(train)
+        # shuffle(self.mnist_node_list)
 
-    def training_nodes(self, mnist_data):
+        # self.initial_benchmark(test_mnist_data)
+        #self._boost_node(test)
+
+    def train_nodes(self, mnist_data):
 
         BoostedMnistNode().setup()
 
@@ -74,7 +79,7 @@ class BoostedMnistModel(MnistModel):
             loss, predictions = self.calculate_loss(expected, mnist_images)
             if loss < best_loss:
                 best_loss = loss
-            print("Loss for: {} is {}!!!".format(str(mnist_node),str(loss)))
+            print("Loss for: {} is {}!!!".format(str(mnist_node), str(loss)))
             print("predictions for node {}: \n{}".format(str(mnist_node), str(predictions)))
 
         print("Best Loss for Nodes is {}!!!".format(str(best_loss)))
@@ -86,15 +91,21 @@ class BoostedMnistModel(MnistModel):
 
         expected, mnist_images = MnistHelper.extract_numbers_images(test_mnist_data)
 
-        for mnist_node_index in range(0, len(self.mnist_node_list)): #type: BoostedMnistNode
+        for mnist_node_index in range(0, len(self.mnist_node_list)):  # type: BoostedMnistNode
             mnist_node = self.mnist_node_list[mnist_node_index]
             self.boosted_node_list.append(mnist_node)
             if len(self.boosted_node_list) == 1:
                 continue
 
-            self.iterate_weights(expected,mnist_node,mnist_images)
+            self.iterate_weights(expected, mnist_node, mnist_images)
 
-    def iterate_weights(self,expected, mnist_node,mnist_images):
+    def iterate_weights(self, expected, mnist_node, mnist_images):
+        '''
+        :type expected:
+        :type mnist_node:
+        :type mnist_images:
+        :rtype:
+        '''
         # test_weights = np.arange(0.0, 2.1, 0.1)
         test_weights = [1]
         best_weights = np.ones(10)
@@ -111,10 +122,9 @@ class BoostedMnistModel(MnistModel):
                 mnist_node.beta_weights = np.array(best_weights)
                 print("Current Loss: {}".format(str(loss)))
                 print("Weights: {}".format(str(mnist_node.beta_weights)))
-                print("predictions for model: \n{}".format( str(predictions)))
+                print("predictions for model: \n{}".format(str(predictions)))
 
         print("Best For Model Loss: " + str(best_loss))
-
 
     def predict_from_images(self, images):
         '''
@@ -126,7 +136,7 @@ class BoostedMnistModel(MnistModel):
         candidates = [{} for _ in range(len(images))]
 
         for boosted_node in self.boosted_node_list:  # type: BoostedMnistNode
-            predictions, _ = boosted_node.predict_from_images(images)
+            predictions = boosted_node.predict_from_images(images)
 
             for prediction, candidate in zip(predictions, candidates):
                 if not prediction in candidate:
@@ -148,19 +158,19 @@ class BoostedMnistModel(MnistModel):
         loss = LossFunctions.zero_one_loss(expected, predictions)
         return loss, predictions
 
+
 def main():
     mnist_data = MnistLoader.read_mnist()
     mnist_data = mnist_data[:1100]
 
     t0 = time.time()
 
-    #train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    train = mnist_data[:100]
+    # train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
+    train = mnist_data[:10]
     test = mnist_data[90:100]
-    test2 = mnist_data[100:200]
+    test2 = mnist_data[100:110]
 
-
-    mnist_model = BoostedMnistModel(iterations=1)
+    mnist_model = BoostedMnistModel(iterations=1, mnist_data=mnist_data)
     mnist_model.train_model(train, test)
 
     true_numbers, test_images = MnistHelper.extract_numbers_images(test2)
@@ -178,7 +188,6 @@ def main():
 
     print("Average Success Rate is: " + str(success_rate))
     print("Total Loss is: " + str(mnist_model.calculate_loss(true_numbers, test_images)[0]))
-
 
     t1 = time.time()
     print("Total Time taken: " + str(t1 - t0) + " Seconds")
