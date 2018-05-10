@@ -39,24 +39,24 @@ class BoostedMnistModel(MnistModel):
 
     def initializes_model(self):
 
-        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(10, 10), binarize_threshold=80, down_scale_ratio=.5))
-        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
+        self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(10, 10), binarize_threshold=80, down_scale_ratio=.5))
+        self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
 
-        self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
+        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
         # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
         # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(9, 10), binarize_threshold=210, down_scale_ratio=.6))
 
     def train_model(self, iterations=1):
 
         # train, test = sk_model.train_test_split(self.mnist_data, test_size=0.2)
-        train = self.mnist_data
-        test = self.mnist_data[:10]
+        train = self.mnist_data[:80]
+        test = self.mnist_data[80:]
 
         self.train_nodes(train)
         # shuffle(self.mnist_node_list)
 
-        # self.initial_benchmark(test_mnist_data)
-        self._boost_node(test)
+        self.initial_benchmark(test)
+        self._boost_nodes(test)
 
     def train_nodes(self, mnist_data):
 
@@ -74,61 +74,65 @@ class BoostedMnistModel(MnistModel):
         print("\n####### Initial Benchmarks #######\n")
 
         expected, mnist_images = MnistHelper.extract_numbers_images(test_mnist_data)
-        best_loss = sys.float_info.max
 
         print("expected numbers: \n" + str(expected))
 
+        best_loss = sys.float_info.max
+
         for mnist_node in self.mnist_node_list:
-            self.boosted_node_list = [mnist_node]
-            loss, predictions = self.calculate_loss(expected, mnist_images)
+            predictions = self.predict_from_images(mnist_images)
+            loss = self.get_loss(predictions, expected)
+
             if loss < best_loss:
                 best_loss = loss
-            print("Loss for: {} is {}!!!".format(str(mnist_node), str(loss)))
+
+            print("Best Loss for: {} is {}!!!".format(str(mnist_node), str(loss)))
             print("predictions for node {}: \n{}".format(str(mnist_node), str(predictions)))
 
         print("Best Loss for Nodes is {}!!!".format(str(best_loss)))
 
-    def _boost_node(self, test_mnist_data):
+    def _boost_nodes(self, test_mnist_data):
 
-        self.boosted_node_list = []
         print("####### Optimizing and Boosting #######")
 
         expected, mnist_images = MnistHelper.extract_numbers_images(test_mnist_data)
 
         for mnist_node_index in range(0, len(self.mnist_node_list)):  # type: BoostedMnistNode
             mnist_node = self.mnist_node_list[mnist_node_index]
-            self.boosted_node_list.append(mnist_node)
-            if len(self.boosted_node_list) == 1:
-                continue
+            self.set_node_weights(expected, mnist_node, mnist_images)
 
-            self.iterate_weights(expected, mnist_node, mnist_images)
-
-    def iterate_weights(self, expected, mnist_node, mnist_images):
+    def set_node_weights(self, expected, mnist_node, mnist_images):
         '''
         :type expected:
         :type mnist_node:
         :type mnist_images:
         :rtype:
         '''
-        # test_weights = np.arange(0.0, 2.1, 0.1)
-        test_weights = [1]
-        best_weights = np.ones(10)
-        best_loss = sys.float_info.max
-        mnist_node.beta_weights = np.ones(10)
+        predictions = self.predict_from_images(mnist_images)
 
-        for i in range(0, len(mnist_node.beta_weights)):
-            for t in test_weights:
-                mnist_node.beta_weights[i] = t
-                loss, predictions = self.calculate_loss(expected, mnist_images)
-                if loss < best_loss:
-                    best_weights = np.array(mnist_node.beta_weights)
-                    best_loss = loss
-                mnist_node.beta_weights = np.array(best_weights)
-                print("Current Loss: {}".format(str(loss)))
-                print("Weights: {}".format(str(mnist_node.beta_weights)))
-                print("predictions for model: \n{}".format(str(predictions)))
+        for i in range(0, 10):
+            mnist_node.beta_weights[i] = 1 - self.get_loss(predictions, expected, i)
 
-        print("Best For Model Loss: " + str(best_loss))
+        new_predictions = self.predict_from_images(mnist_images)
+        loss = self.get_loss(new_predictions, expected, i)
+        print("Weights: {}".format(str(mnist_node.beta_weights)))
+        print("predictions for model: \n{}".format(str(predictions)))
+        print("New Loss: " + str(loss))
+
+    def get_loss(self, predictions, expected, i=None):
+
+        if i:
+            indexes = np.where(np.array(predictions) == str(i))[0]
+            predictions = [predictions[i] for i in indexes]
+            expected = [expected[i] for i in indexes]
+
+        if len(predictions) == 0:
+            return .5
+
+        confusion_matrix = sk_metrics.confusion_matrix(y_true=expected, y_pred=predictions)
+        correct_classifications = np.diagonal(confusion_matrix);
+        loss = 1 - sum(correct_classifications) / np.sum(confusion_matrix)
+        return loss
 
     def predict_from_images(self, images):
         '''
@@ -139,14 +143,14 @@ class BoostedMnistModel(MnistModel):
         final_predictions = []
         candidates = [{} for _ in range(len(images))]
 
-        for boosted_node in self.boosted_node_list:  # type: BoostedMnistNode
-            predictions = boosted_node.predict_from_images(images)
+        for mnist_node in self.mnist_node_list:  # type: BoostedMnistNode
+            predictions = mnist_node.predict_from_images(images)
 
             for prediction, candidate in zip(predictions, candidates):
                 if not prediction in candidate:
-                    candidate[prediction] = boosted_node.beta_weights[int(prediction)]
+                    candidate[prediction] = mnist_node.beta_weights[int(prediction)]
                 else:
-                    candidate[prediction] += boosted_node.beta_weights[int(prediction)]
+                    candidate[prediction] += mnist_node.beta_weights[int(prediction)]
 
         for candidate in candidates:
             final_prediction = max(candidate, key=candidate.get) if len(candidates) != 0 else np.random.choice(
@@ -157,11 +161,6 @@ class BoostedMnistModel(MnistModel):
 
         return final_predictions
 
-    def calculate_loss(self, expected, mnist_images):
-        predictions = self.predict_from_images(mnist_images)
-        loss = LossFunctions.zero_one_loss(expected, predictions)
-        return loss, predictions
-
 
 def main():
     mnist_data = MnistLoader.read_mnist()
@@ -170,7 +169,7 @@ def main():
 
     # train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
     train = mnist_data[:100]
-    test = mnist_data[3000:4000]
+    test = mnist_data[100:200]
 
     mnist_model = BoostedMnistModel(mnist_data=train)
     mnist_model.train_model(iterations=1)
@@ -182,7 +181,7 @@ def main():
     predictions = mnist_model.predict_from_images(test_images)
     confusion_matrix = sk_metrics.confusion_matrix(y_true=expected, y_pred=predictions)
 
-    CSVHelper.write_predictions(expected, predictions)
+    # CSVHelper.write_predictions(expected, predictions)
 
     correct_classifications = np.diagonal(confusion_matrix);
     success_rate = sum(correct_classifications) / np.sum(confusion_matrix)
@@ -191,7 +190,6 @@ def main():
     print("predictions: " + str(predictions))
 
     print("Average Success Rate is: " + str(success_rate))
-    print("Total Loss is: " + str(mnist_model.calculate_loss(expected, test_images)[0]))
 
     t1 = time.time()
     print("Total Time taken: " + str(t1 - t0) + " Seconds")

@@ -58,9 +58,9 @@ class MnistNode(ABC):
         HBaseManager(ConnectionPool(size=1, host=HBaseManager.HOST, port=HBaseManager.PORT)).create_table(
             table_name=self.TABLE_NAME, delete=True)
 
-    def predict_from_images(self, mnist_data):
+    def predict_from_images(self, mnist_data, use_cache=False):
 
-        if self.cached_predictions:
+        if self.cached_predictions and use_cache:
             return self.cached_predictions
 
         batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
@@ -82,14 +82,14 @@ class MnistNode(ABC):
 
         if len(hash_keys) == 0:
             print("no good hash keys")
-            return random.choice(self.ALL_DIGITS), self.get_default_probs()
+            return random.choice(self.ALL_DIGITS)
 
         hash_rows = hbase_manager.batch_get_rows(self.TABLE_NAME, hash_keys)
         hashed_predictions = [hash_row.row_values[self.COLUMN_NAME] for hash_row in hash_rows]
 
         if len(hashed_predictions) == 0:
             print("no collision predictions")
-            return random.choice(self.ALL_DIGITS), self.get_default_probs()
+            return random.choice(self.ALL_DIGITS)
 
         test = dict((x,hashed_predictions.count(x)) for x in set(hashed_predictions))
 
@@ -97,34 +97,26 @@ class MnistNode(ABC):
 
         return best_prediction
 
-    def predict_hash_values(self, hash_keys: list, hbase_manager: HBaseManager, index):
+    def predict_probs(self, hash_keys: list, hbase_manager: HBaseManager, index):
 
         if len(hash_keys) == 0:
             print("no good hash keys")
-            return random.choice(self.ALL_DIGITS), self.get_default_probs()
+            return self.get_default_probs()
 
         hash_rows = hbase_manager.batch_get_rows(self.TABLE_NAME, hash_keys)
         hashed_predictions = [hash_row.row_values[self.COLUMN_NAME] for hash_row in hash_rows]
 
         if len(hashed_predictions) == 0:
             print("no collision predictions")
-            return random.choice(self.ALL_DIGITS), self.get_default_probs()
+            return self.get_default_probs()
 
-        test = dict((x,hashed_predictions.count(x)) for x in set(hashed_predictions))
-
-        best_prediction = max(hashed_predictions, key=hashed_predictions.count)
-
-        return best_prediction
-
-    def get_hash_probabilities(self, hashed_predictions):
         prediction_count = Counter(hashed_predictions)
-        prediction_probs =  {k: v / len(hashed_predictions) for k, v in prediction_count.items()}
+        prediction_probs = {k: v / len(hashed_predictions) for k, v in prediction_count.items()}
         for digit in self.ALL_DIGITS:
             if digit not in prediction_probs:
                 prediction_probs[digit] = 0.0
 
         return prediction_probs
-
 
     def get_default_probs(self):
         return dict([(digit, self.DEFAULT_PROB) for digit in self.ALL_DIGITS])

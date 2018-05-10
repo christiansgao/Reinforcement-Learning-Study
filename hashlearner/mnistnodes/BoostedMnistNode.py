@@ -90,19 +90,6 @@ class BoostedMnistNode(MnistNode):
 
         return positioned_shaped_keys
 
-    '''def extract_keys(self, mnist_image: np.ndarray, index: int):
-        convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.convolve_shape)
-        images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.down_scale_ratio)
-        binarized_images = MnistHelper.binarize_images(images_rescaled, threshold=self.binarize_threshold)
-        feature_positions = list(range(len(binarized_images)))
-
-        hash_keys = [re.sub("[^0-9]+", "", str(binarized_image)) for binarized_image in binarized_images]
-        feature_position_pair = list(zip(hash_keys, feature_positions))
-        useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
-        positioned_keys = [str(position) + "-" + key for key, position in useful_features]
-
-        return positioned_keys'''
-
     def predict_from_image_batch(self, mnist_batch, index):
 
         t0 = time.time()
