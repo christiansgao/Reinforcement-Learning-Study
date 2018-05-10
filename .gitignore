@@ -3,4 +3,4 @@ data/
 *.pyc
 .DS_Store
 node_test_data/.Rhistory
-hashlearner/data/results/results*
+hashlearner/data/results/*
