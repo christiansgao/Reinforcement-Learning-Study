@@ -1,6 +1,6 @@
-data/
+data/t*
 .idea
 *.pyc
 .DS_Store
 node_test_data/.Rhistory
-hashlearner/data/results/*
+hashlearner/data/results/results*.csv
