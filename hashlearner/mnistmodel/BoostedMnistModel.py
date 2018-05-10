@@ -13,6 +13,7 @@ import scipy.optimize.linesearch
 
 from hashlearner.mnistmodel.MnistModel import MnistModel
 from hashlearner.mnistnodes.MnistNode import MnistNode
+from hashlearner.helper import CSVHelper
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 from hashlearner.mnistnodes.BoostedMnistNode import BoostedMnistNode
 from random import shuffle
@@ -38,16 +39,18 @@ class BoostedMnistModel(MnistModel):
 
     def initializes_model(self):
 
-        self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
-        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
+        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(10, 10), binarize_threshold=80, down_scale_ratio=.5))
+        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
+
+        self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
         # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
+        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(9, 10), binarize_threshold=210, down_scale_ratio=.6))
 
     def train_model(self, iterations=1):
 
-
-        #train, test = sk_model.train_test_split(self.mnist_data, test_size=0.2)
-        train = self.mnist_data[:20]
-        test = self.mnist_data[100:110]
+        # train, test = sk_model.train_test_split(self.mnist_data, test_size=0.2)
+        train = self.mnist_data
+        test = self.mnist_data[:10]
 
         self.train_nodes(train)
         # shuffle(self.mnist_node_list)
@@ -146,7 +149,8 @@ class BoostedMnistModel(MnistModel):
                     candidate[prediction] += boosted_node.beta_weights[int(prediction)]
 
         for candidate in candidates:
-            final_prediction = max(candidate, key=candidate.get) if len(candidates) != 0 else np.random.choice(self.response_set)
+            final_prediction = max(candidate, key=candidate.get) if len(candidates) != 0 else np.random.choice(
+                self.response_set)
             final_predictions.append(final_prediction)
 
         print("final candidates: " + str(candidates))
@@ -161,31 +165,33 @@ class BoostedMnistModel(MnistModel):
 
 def main():
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:120]
 
     t0 = time.time()
 
     # train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    test = mnist_data[100:120]
+    train = mnist_data[:100]
+    test = mnist_data[3000:4000]
 
-    mnist_model = BoostedMnistModel(mnist_data=mnist_data)
+    mnist_model = BoostedMnistModel(mnist_data=train)
     mnist_model.train_model(iterations=1)
 
-    true_numbers, test_images = MnistHelper.extract_numbers_images(test)
+    expected, test_images = MnistHelper.extract_numbers_images(test)
 
     print("Starting predictions")
 
     predictions = mnist_model.predict_from_images(test_images)
-    confusion_matrix = sk_metrics.confusion_matrix(y_true=true_numbers, y_pred=predictions)
+    confusion_matrix = sk_metrics.confusion_matrix(y_true=expected, y_pred=predictions)
+
+    CSVHelper.write_predictions(expected, predictions)
 
     correct_classifications = np.diagonal(confusion_matrix);
     success_rate = sum(correct_classifications) / np.sum(confusion_matrix)
 
-    print("true numbers: " + str(true_numbers))
+    print("true numbers: " + str(expected))
     print("predictions: " + str(predictions))
 
     print("Average Success Rate is: " + str(success_rate))
-    print("Total Loss is: " + str(mnist_model.calculate_loss(true_numbers, test_images)[0]))
+    print("Total Loss is: " + str(mnist_model.calculate_loss(expected, test_images)[0]))
 
     t1 = time.time()
     print("Total Time taken: " + str(t1 - t0) + " Seconds")

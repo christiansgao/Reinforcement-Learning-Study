@@ -60,8 +60,8 @@ class MnistNode(ABC):
 
     def predict_from_images(self, mnist_data):
 
-        if self.cached_predictions and self.cached_probabilities:
-            return self.cached_predictions, self.cached_probabilities
+        if self.cached_predictions:
+            return self.cached_predictions
 
         batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
 

@@ -74,14 +74,12 @@ class HBaseMnistModel(MnistModel):
 def main():
 
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:110]
-
 
     t0 = time.time()
 
     train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    train = mnist_data[:10]
-    test = mnist_data[100:]
+    train = mnist_data[:100]
+    test = mnist_data[100:200]
 
     mnist_model = HBaseMnistModel()
     status = mnist_model.train_model(train)

@@ -25,7 +25,7 @@ class BoostedMnistNode(MnistNode):
     DOWN_SCALE_RATIO = .5
     BINARIZE_THRESHOLD = 80
     TABLE_NAME = "L2Boost-Mnist-Node-1"
-    BATCH_SIZE = 10
+    BATCH_SIZE = 100
     POOL_SIZE = 10
     CONNECTION_POOL_SIZE = 300
     COLUMN_NAME = "number"
@@ -75,7 +75,7 @@ class BoostedMnistNode(MnistNode):
         t1 = time.time()
         print("Time taken to train batch {} : {} Seconds".format(str(index),str(t1 - t0)))
 
-    '''def extract_keys(self, mnist_image: np.ndarray, index: int):
+    def extract_keys(self, mnist_image: np.ndarray, index: int):
 
         convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.convolve_shape)
         images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.down_scale_ratio)
@@ -88,9 +88,9 @@ class BoostedMnistNode(MnistNode):
         positioned_shaped_keys = [ "{}-{}-{}-{}".format(str(position),self.convolve_shape[0], self.convolve_shape[1],key)
                                    for key, position in useful_features]
 
-        return positioned_shaped_keys'''
+        return positioned_shaped_keys
 
-    def extract_keys(self, mnist_image: np.ndarray, index: int):
+    '''def extract_keys(self, mnist_image: np.ndarray, index: int):
         convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.convolve_shape)
         images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.down_scale_ratio)
         binarized_images = MnistHelper.binarize_images(images_rescaled, threshold=self.binarize_threshold)
@@ -101,7 +101,7 @@ class BoostedMnistNode(MnistNode):
         useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
         positioned_keys = [str(position) + "-" + key for key, position in useful_features]
 
-        return positioned_keys
+        return positioned_keys'''
 
     def predict_from_image_batch(self, mnist_batch, index):
 
