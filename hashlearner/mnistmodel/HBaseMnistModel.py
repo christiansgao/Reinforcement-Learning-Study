@@ -12,6 +12,7 @@ from hashlearner.mnistmodel.MnistModel import MnistModel
 from hashlearner.mnistnodes.MnistNode import MnistNode
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 from hashlearner.mnistnodes.SimpleHBaseMnistNode import SimpleHBaseMnistNode
+from hashlearner.helper import CSVHelper
 
 
 class HBaseMnistModel(MnistModel):
@@ -28,9 +29,12 @@ class HBaseMnistModel(MnistModel):
 
     def initializes_model(self):
 
-        self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
+        #self.mnist_node_list.append(SimpleHBaseMnistNode()) #Model 1
+        #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.5))
+        #self.mnist_node_list.append(FilterHBaseMnistNode())
 
     def train_model(self, mnist_data):
 
@@ -77,25 +81,30 @@ def main():
 
     t0 = time.time()
 
-    train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    train = mnist_data[:100]
-    test = mnist_data[100:200]
+    #train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
+    train = mnist_data[:2000]
+    test = mnist_data[2000:4000]
+    #train = MnistLoader.read_mnist(dataset="training")
+    #test = MnistLoader.read_mnist(dataset="testing")
 
     mnist_model = HBaseMnistModel()
     status = mnist_model.train_model(train)
 
-    true_numbers, test_images = MnistHelper.extract_numbers_images(test)
+    expected, test_images = MnistHelper.extract_numbers_images(test)
 
     print("Starting predictions")
 
     predictions = mnist_model.predict_from_images(test_images)
-    confusion_matrix = sk_metrics.confusion_matrix(y_true=true_numbers, y_pred=predictions)
+    confusion_matrix = sk_metrics.confusion_matrix(y_true=expected, y_pred=predictions)
 
     correct_classifications = np.diagonal(confusion_matrix);
     success_rate = sum(correct_classifications) / np.sum(confusion_matrix)
 
-    print("true numbers: " + str(true_numbers))
+    CSVHelper.write_predictions(expected, predictions, name="5-9_160_6")
+
+    print("true numbers: " + str(expected))
     print("predictions: " + str(predictions))
+
 
     print("Average Success Rate is: " + str(success_rate))
 

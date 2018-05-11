@@ -14,8 +14,9 @@ from hashlearner.mnistnodes.MnistNode import MnistNode
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 from hbase.HBaseManager import HBaseManager, HBaseRow
 from hashlearner.mnistmodel.MnistModel import MnistModel
+from hashlearner.helper.mnist import Filters
 
-class BoostedMnistNode(MnistNode):
+class FilterHBaseMnistNode(MnistNode):
     '''
     Simple Hash node
     '''
@@ -24,7 +25,7 @@ class BoostedMnistNode(MnistNode):
     CONVOLVE_SHAPE = (10, 10)
     DOWN_SCALE_RATIO = .5
     BINARIZE_THRESHOLD = 80
-    TABLE_NAME = "L2Boost-Mnist-Node-1"
+    TABLE_NAME = "Filtered-Mnist-Node-1"
     BATCH_SIZE = 100
     POOL_SIZE = 10
     CONNECTION_POOL_SIZE = 300
@@ -77,9 +78,10 @@ class BoostedMnistNode(MnistNode):
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
 
+        mnist_image = Filters.edge(mnist_image)
         convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.convolve_shape)
         images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.down_scale_ratio)
-        binarized_images = MnistHelper.binarize_images(images_rescaled, threshold=self.binarize_threshold)
+        binarized_images = MnistHelper.interpolate_images(images_rescaled, bins=np.array([0, 100, 200, 280]))
         feature_positions = list(range(len(binarized_images)))
 
         hash_keys = [re.sub("[^0-9]+", "", str(binarized_image)) for binarized_image in binarized_images]
@@ -118,13 +120,13 @@ class BoostedMnistNode(MnistNode):
 
 def main():
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:100]
+    mnist_data = mnist_data[:1000]
 
     t0 = time.time()
 
     train, test = sk_model.train_test_split(mnist_data, test_size=0.2)
 
-    mnist_node = BoostedMnistNode(setup_table=True, convolve_shape= (10, 10))
+    mnist_node = FilterHBaseMnistNode(setup_table=True, convolve_shape= (8, 8), down_scale_ratio=.3)
     status = mnist_node.train_node(train)
     print("training status: " + str(status))
 

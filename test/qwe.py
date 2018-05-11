@@ -1,19 +1,16 @@
 import numpy as np
 import sklearn.metrics as sk_metrics
+from scipy import ndimage
+from hashlearner.helper.mnist import MnistLoader
+
+mnist_data = MnistLoader.read_mnist()
+mnist_data = mnist_data[0][1]
 
 
-def get_success( i, predictions, expected):
-    indexes = np.where(np.array(predictions) == i)[0]
-    if len(indexes) == 0:
-        return .5
-    predictions = [predictions[i] for i in indexes]
-    expected = [expected[i] for i in indexes]
+a = np.array([[1, 2, 3, 1],[0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0]])
+k = np.array([[1,1,1],[1,1,1],[1,1,1]])
+test = ndimage.convolve(a, k, mode='constant', cval=0.0)
+print(test)
 
-    confusion_matrix = sk_metrics.confusion_matrix(y_true=expected, y_pred=predictions)
-    correct_classifications = np.diagonal(confusion_matrix);
-    success_rate = sum(correct_classifications) / np.sum(confusion_matrix)
-    return success_rate
-
-test = get_success(1,[0,2,0,4,0],[0,4,3,1,0])
-test = list(range(0, 10))
+blurred_face = ndimage.gaussian_filter(mnist_data, sigma=3)
 pass

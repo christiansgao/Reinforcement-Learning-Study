@@ -14,7 +14,7 @@ class MnistImage:
         self.images = image
 
 
-def read_mnist(dataset = "training", path = "../../data/"):
+def read_mnist(dataset = "training", path = "/Users/christiangao/Documents/MAS/thesis/Reinforcement-Learning-Study/data/"):
     """
     Python function for importing the MNIST data set.  It returns an iterator
     of 2-tuples with the first element being the label and the second element
@@ -72,6 +72,9 @@ def show(image):
     ax.xaxis.set_ticks_position('top')
     ax.yaxis.set_ticks_position('left')
     pyplot.show()
+
+def get_example():
+    return read_mnist()[0][1]
 
 def main():
     training = read_mnist("training")

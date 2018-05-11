@@ -58,12 +58,12 @@ class MnistNode(ABC):
         HBaseManager(ConnectionPool(size=1, host=HBaseManager.HOST, port=HBaseManager.PORT)).create_table(
             table_name=self.TABLE_NAME, delete=True)
 
-    def predict_from_images(self, mnist_data, use_cache=False):
+    def predict_from_images(self, mnist_images, use_cache=False):
 
         if self.cached_predictions and use_cache:
             return self.cached_predictions
 
-        batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
+        batches = MnistHelper.batch(mnist_images, self.BATCH_SIZE)
 
         indexs = list(range(len(batches)))
         predictions = [self.predict_from_image_batch(batch, index) for batch, index in

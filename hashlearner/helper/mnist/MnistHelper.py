@@ -2,6 +2,8 @@ import numpy as np
 import itertools
 import warnings
 from skimage.transform import rescale
+from scipy import ndimage
+from hashlearner.helper.mnist import MnistLoader
 
 RESPONSE_INDEX = 0
 PREDICTOR_INDEX = 1
@@ -36,6 +38,10 @@ def binarize_images(images: list, threshold: int):
     binarized_images = [binarize_image(image, threshold) for image in images]
     return binarized_images
 
+def interpolate_images(images,bins = np.array([0, 100, 150, 200, 280])):
+    images_digitized = [np.digitize(image, bins) for image in images]
+    return images_digitized
+
 def _batch(iterable, n=1):
     l = len(iterable)
     for ndx in range(0, l, n):
@@ -51,3 +57,12 @@ def extract_numbers_images(mnist_batch):
     numbers = [mnist_obs[RESPONSE_INDEX] for mnist_obs in mnist_batch]
     mnist_images = [mnist_obs[PREDICTOR_INDEX] for mnist_obs in mnist_batch]
     return numbers, mnist_images
+
+
+def main():
+    mnist_image = MnistLoader.get_example()
+    test = interpolate_images([mnist_image])
+    MnistLoader.show(test)
+
+if __name__ == "__main__":
+    main()

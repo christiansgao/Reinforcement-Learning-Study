@@ -28,7 +28,7 @@ class SimpleHBaseMnistNode(MnistNode):
     BINARIZE_THRESHOLD = 80
     ALL_DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     TABLE_NAME = "Simple-Mnist-Node-1"
-    BATCH_SIZE = 300
+    BATCH_SIZE = 100
     POOL_SIZE = 10
     CONNECTION_POOL_SIZE = 100
     COLUMN_NAME = "number"
@@ -119,9 +119,9 @@ class SimpleHBaseMnistNode(MnistNode):
         return positioned_keys
 
 
-    def predict_from_images(self, mnist_data):
+    def predict_from_images(self, mnist_image):
 
-        batches = MnistHelper.batch(mnist_data, self.BATCH_SIZE)
+        batches = MnistHelper.batch(mnist_image, self.BATCH_SIZE)
 
         indexs = list(range(len(batches)))
         predictions = [self.predict_from_image_batch(batch, index) for batch, index in zip(batches, indexs)]
@@ -171,7 +171,7 @@ class SimpleHBaseMnistNode(MnistNode):
         #thread_pool.close()
 
         t1 = time.time()
-        print("Mnist Batch {} predicted in: {} Seconds".format(str(index), str(t1 - t0)))
+        print("Mnist Batch {} predicted in: {} Seconds, For Node: {}".format(str(index), str(t1 - t0), self.__str__()))
 
         return predictions
 

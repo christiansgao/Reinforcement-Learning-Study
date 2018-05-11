@@ -16,6 +16,8 @@ from hashlearner.mnistnodes.MnistNode import MnistNode
 from hashlearner.helper import CSVHelper
 from hashlearner.helper.mnist import MnistLoader, MnistHelper
 from hashlearner.mnistnodes.BoostedMnistNode import BoostedMnistNode
+from hashlearner.mnistnodes.FilterHBaseMnistNode import FilterHBaseMnistNode
+
 from random import shuffle
 import sklearn.ensemble.gradient_boosting
 import sys
@@ -41,16 +43,18 @@ class BoostedMnistModel(MnistModel):
 
         self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(10, 10), binarize_threshold=80, down_scale_ratio=.5))
         self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
+        self.mnist_node_list.append(FilterHBaseMnistNode())
 
-        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
-        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
-        # self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(9, 10), binarize_threshold=210, down_scale_ratio=.6))
+        self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
+        self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
+        self.mnist_node_list.append(BoostedMnistNode(convolve_shape=(9, 10), binarize_threshold=210, down_scale_ratio=.6))
 
     def train_model(self, iterations=1):
 
         # train, test = sk_model.train_test_split(self.mnist_data, test_size=0.2)
-        train = self.mnist_data[:80]
-        test = self.mnist_data[80:]
+        split = int(len(self.mnist_data)*.5)
+        train = self.mnist_data[:split]
+        test = self.mnist_data[split:]
 
         self.train_nodes(train)
         # shuffle(self.mnist_node_list)
@@ -115,9 +119,9 @@ class BoostedMnistModel(MnistModel):
 
         new_predictions = self.predict_from_images(mnist_images)
         loss = self.get_loss(new_predictions, expected, i)
-        print("Weights: {}".format(str(mnist_node.beta_weights)))
-        print("predictions for model: \n{}".format(str(predictions)))
-        print("New Loss: " + str(loss))
+        #print("Weights: {}".format(str(mnist_node.beta_weights)))
+        #print("predictions for model: \n{}".format(str(predictions)))
+        print("New Loss After setting weights: " + str(loss))
 
     def get_loss(self, predictions, expected, i=None):
 
@@ -134,7 +138,7 @@ class BoostedMnistModel(MnistModel):
         loss = 1 - sum(correct_classifications) / np.sum(confusion_matrix)
         return loss
 
-    def predict_from_images(self, images):
+    def predict_from_images(self, images, use_cache=True):
         '''
         :type images: pandas.DataFrame
         :rtype: list
@@ -144,7 +148,7 @@ class BoostedMnistModel(MnistModel):
         candidates = [{} for _ in range(len(images))]
 
         for mnist_node in self.mnist_node_list:  # type: BoostedMnistNode
-            predictions = mnist_node.predict_from_images(images)
+            predictions = mnist_node.predict_from_images(images, use_cache=use_cache)
 
             for prediction, candidate in zip(predictions, candidates):
                 if not prediction in candidate:
@@ -157,7 +161,7 @@ class BoostedMnistModel(MnistModel):
                 self.response_set)
             final_predictions.append(final_prediction)
 
-        print("final candidates: " + str(candidates))
+        #print("final candidates: " + str(candidates))
 
         return final_predictions
 
@@ -168,8 +172,8 @@ def main():
     t0 = time.time()
 
     # train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    train = mnist_data[:100]
-    test = mnist_data[100:200]
+    train = mnist_data[:2000]
+    test = mnist_data[2000:3000]
 
     mnist_model = BoostedMnistModel(mnist_data=train)
     mnist_model.train_model(iterations=1)
@@ -178,10 +182,10 @@ def main():
 
     print("Starting predictions")
 
-    predictions = mnist_model.predict_from_images(test_images)
+    predictions = mnist_model.predict_from_images(test_images, use_cache=False)
     confusion_matrix = sk_metrics.confusion_matrix(y_true=expected, y_pred=predictions)
 
-    # CSVHelper.write_predictions(expected, predictions)
+    CSVHelper.write_predictions(expected, predictions)
 
     correct_classifications = np.diagonal(confusion_matrix);
     success_rate = sum(correct_classifications) / np.sum(confusion_matrix)
