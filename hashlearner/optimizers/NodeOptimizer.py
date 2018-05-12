@@ -88,7 +88,7 @@ def get_prediction_rate(simple_mnist_node: SimpleHBaseMnistNode, train_mnist: li
 
 def main():
     t0 = time.time()
-    mnist_data = MnistLoader.read_mnist(path="../../../data/")
+    mnist_data = MnistLoader.read_mnist()
     mnist_data = mnist_data[:300]
 
     optimize_simple_nodes(mnist_data)

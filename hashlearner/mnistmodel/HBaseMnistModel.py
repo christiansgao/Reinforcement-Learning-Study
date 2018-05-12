@@ -100,7 +100,7 @@ def main():
     correct_classifications = np.diagonal(confusion_matrix);
     success_rate = sum(correct_classifications) / np.sum(confusion_matrix)
 
-    CSVHelper.write_predictions(expected, predictions, name="5-9_160_6")
+    CSVHelper.write_predictions(expected, predictions, name="12-6_180_5")
 
     print("true numbers: " + str(expected))
     print("predictions: " + str(predictions))
