@@ -21,7 +21,8 @@ def read_mnist(dataset = "training", path = "/Users/christiangao/Documents/MAS/t
     being a numpy.uint8 2D array of pixel data for the given image.
     """
 
-    path = os.path.abspath(path)
+    #path = os.path.abspath(path)
+    path = "/home/christian/Documents/Thesis/Reinforcement-Learning-Study/data/"
 
     if dataset is "training":
         fname_img = os.path.join(path, 'train-images-idx3-ubyte')

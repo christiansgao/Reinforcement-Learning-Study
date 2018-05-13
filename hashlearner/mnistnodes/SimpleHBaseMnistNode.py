@@ -33,18 +33,19 @@ class SimpleHBaseMnistNode(MnistNode):
     CONNECTION_POOL_SIZE = 100
     COLUMN_NAME = "number"
 
-    def __init__(self, setup_table = False, convolve_shape = CONVOLVE_SHAPE, down_scale_ratio = DOWN_SCALE_RATIO, binarize_threshold = BINARIZE_THRESHOLD):
+    def __init__(self, setup_table = False, table_name = TABLE_NAME, convolve_shape = CONVOLVE_SHAPE, down_scale_ratio = DOWN_SCALE_RATIO, binarize_threshold = BINARIZE_THRESHOLD):
         super().__init__()
 
         self.binarize_threshold = binarize_threshold
         self.convolve_shape = convolve_shape
         self.down_scale_ratio = down_scale_ratio
+        self.table_name = table_name
         if setup_table:
             self.setup()
 
     def setup(self):
         HBaseManager(ConnectionPool(size=1, host=HBaseManager.HOST, port=HBaseManager.PORT)).create_table(
-            table_name=self.TABLE_NAME, delete=True)
+            table_name=self.table_name, delete=True)
 
     def train_batch(self, mnist_batch, index):
         '''
@@ -102,7 +103,7 @@ class SimpleHBaseMnistNode(MnistNode):
             HBaseRow(row_key=hash_key, row_values={self.COLUMN_NAME: number}, family_name=HBaseManager.FAMILY_NAME)
             for hash_key in hash_keys
         ]
-        status = hbase_manager.batch_insert(self.TABLE_NAME, batch_insert_rows)
+        status = hbase_manager.batch_insert(self.table_name, batch_insert_rows)
         return True
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
@@ -136,7 +137,7 @@ class SimpleHBaseMnistNode(MnistNode):
             print("no good hash keys")
             return random.choice(self.ALL_DIGITS)
 
-        hash_rows = hbase_manager.batch_get_rows(self.TABLE_NAME, hash_keys)
+        hash_rows = hbase_manager.batch_get_rows(self.table_name, hash_keys)
         hashed_predictions = [hash_row.row_values[self.COLUMN_NAME] for hash_row in hash_rows]
         if len(hashed_predictions) == 0:
             print("no collision predictions")
