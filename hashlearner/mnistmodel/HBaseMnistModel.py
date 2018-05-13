@@ -32,6 +32,7 @@ class HBaseMnistModel(MnistModel):
 
         #self.mnist_node_list.append(SimpleHBaseMnistNode()) #Model 1
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
+
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.5))
@@ -39,7 +40,7 @@ class HBaseMnistModel(MnistModel):
 
     def train_model(self, mnist_data):
 
-        SimpleHBaseMnistNode().setup()
+        #SimpleHBaseMnistNode().setup()
 
         index = 1
         for hash_node in self.mnist_node_list: #type: MnistNode
@@ -83,10 +84,10 @@ def main():
     t0 = time.time()
 
     #train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
-    train = mnist_data[:2000]
-    test = mnist_data[2000:4000]
-    #train = MnistLoader.read_mnist(dataset="training")
-    #test = MnistLoader.read_mnist(dataset="testing")
+    #train = mnist_data[:100]
+    #test = mnist_data[200:300]
+    train = MnistLoader.read_mnist(dataset="training")
+    test = MnistLoader.read_mnist(dataset="testing")
 
     mnist_model = HBaseMnistModel()
     status = mnist_model.train_model(train)
@@ -101,7 +102,7 @@ def main():
     correct_classifications = np.diagonal(confusion_matrix);
     success_rate = sum(correct_classifications) / np.sum(confusion_matrix)
 
-    CSVHelper.write_predictions(expected, predictions, name="12-6_180_5")
+    CSVHelper.write_predictions(expected, predictions, name="F-10-10_80_5")
 
     print("true numbers: " + str(expected))
     print("predictions: " + str(predictions))

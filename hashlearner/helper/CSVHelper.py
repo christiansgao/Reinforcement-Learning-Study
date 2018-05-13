@@ -3,7 +3,7 @@ import time
 
 
 def write_predictions(expected, predictions, name = "name",
-                      path="/Users/christiangao/Documents/MAS/thesis/Reinforcement-Learning-Study/hashlearner/data/results/"):
+                      path="../data/results/"):
     """
     Write data to a CSV file path
     """
