@@ -178,6 +178,7 @@ class SimpleHBaseMnistNode(MnistNode):
 
 
 def main():
+    print("starting hbase mnist node")
     mnist_data = MnistLoader.read_mnist()
     mnist_data = mnist_data[:100]
 

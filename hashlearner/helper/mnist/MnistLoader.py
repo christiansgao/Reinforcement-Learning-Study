@@ -22,7 +22,7 @@ def read_mnist(dataset = "training", path = "/Users/christiangao/Documents/MAS/t
     """
 
     #path = os.path.abspath(path)
-    path = "/home/christian/Documents/Thesis/Reinforcement-Learning-Study/data/"
+    path = "/home/christian/Documents/Reinforcement-Learning-Study/data/"
 
     if dataset is "training":
         fname_img = os.path.join(path, 'train-images-idx3-ubyte')

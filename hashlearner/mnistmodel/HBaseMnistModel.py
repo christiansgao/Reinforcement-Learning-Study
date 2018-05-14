@@ -33,10 +33,10 @@ class HBaseMnistModel(MnistModel):
         #self.mnist_node_list.append(SimpleHBaseMnistNode()) #Model 1
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
 
-        #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4))
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8))
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.5))
-        self.mnist_node_list.append(FilterHBaseMnistNode())
+        #self.mnist_node_list.append(FilterHBaseMnistNode())
 
     def train_model(self, mnist_data):
 
