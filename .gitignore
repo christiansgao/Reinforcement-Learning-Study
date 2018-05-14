@@ -3,4 +3,3 @@ data/t*
 *.pyc
 .DS_Store
 node_test_data/.Rhistory
-hashlearner/data/results/results*.csv
