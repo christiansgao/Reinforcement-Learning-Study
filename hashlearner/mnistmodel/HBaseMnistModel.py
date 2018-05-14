@@ -34,8 +34,8 @@ class HBaseMnistModel(MnistModel):
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6))
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4, setup_table=True, table_name="simple-node-1"))
         #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8, setup_table=True, table_name="simple-node-2"))
-        #self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.5))
-        self.mnist_node_list.append(FilterHBaseMnistNode(setup_table=True))
+        self.mnist_node_list.append(SimpleHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.5))
+        #self.mnist_node_list.append(FilterHBaseMnistNode(setup_table=True))
 
     def train_model(self, mnist_data):
 
@@ -101,7 +101,7 @@ def main():
     correct_classifications = np.diagonal(confusion_matrix);
     success_rate = sum(correct_classifications) / np.sum(confusion_matrix)
 
-    CSVHelper.write_predictions(expected, predictions, name="F-10-10_80_5")
+    CSVHelper.write_predictions(expected, predictions, name="12-6_150_5")
 
     print("true numbers: " + str(expected))
     print("predictions: " + str(predictions))
