@@ -1,0 +1,332 @@
+shiny::runApp('Documents/b-statistics/APP')
+runApp('Documents/b-statistics/APP')
+runApp('Documents/b-statistics/APP')
+runApp('Documents/b-statistics/APP')
+runApp('Documents/b-statistics/APP')
+runApp('Documents/b-statistics/APP')
+runApp('Documents/b-statistics/APP')
+runApp('Documents/b-statistics/APP')
+runApp('Documents/b-statistics/APP')
+pchisq(q=100, df=80, ncp = 0, lower.tail = FALSE, log.p = FALSE)
+pi
+area =  function(r){
+return(pi*r^2)
+}
+area(20)
+?rnorm()
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+radi
+areas<-sapply(radi,area)
+mean(area)
+area
+area(20)
+area =  function(r){
+return(pi*r^2)
+}
+area(20)
+areas<-sapply(radi,area)
+mean(area)
+areas<-sapply(radi,area)
+areas
+areas<-sapply(radi,area)
+mean(area)
+mean(1)
+mean(as.numeric(area))
+area
+mean(areas)
+area(20)
+var(areas)
+?var
+areas
+sd(areas)
+area(20)
+mean(areas)
+areas<-sapply(radi,area)
+areas
+mean(areas)
+area(20)
+sqrt(sd(areas))
+area(20)
+mean(areas)-sqrt(sd(areas))
+area(20)
+radi
+hist(radi)
+mean(areas)
+mean(areas)-4
+area(20)
+sqrt(sd(areas))
+mean(areas)-sqrt(sd(areas))
+#Actual Area
+area(20)
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+radi
+var(radi)
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+mean(areas)-16
+#Actual Area
+area(20)
+mean(areas)-16
+#Actual Area
+area(20)
+area =  function(r){
+return(pi*r^2)
+}
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+area(20)
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+mean(areas)
+area(20)
+mean(areas)-area(20)
+mean(areas)-area(20)
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+mean(areas)
+#Actual Area
+area(20)
+mean(areas)-area(20)
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+mean(areas)
+#Actual Area
+area(20)
+mean(areas)-area(20)
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+mean(areas)
+#Actual Area
+area(20)
+mean(areas)-area(20)
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+mean(areas)
+#Actual Area
+area(20)
+mean(areas)-area(20)
+radi<-rnorm(n = 1000000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+mean(areas)
+#Actual Area
+area(20)
+mean(areas)-area(20)
+radi<-rnorm(n = 1000000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+mean(areas)
+#Actual Area
+area(20)
+mean(areas)-area(20)
+radi<-rnorm(n = 10000, mean = 20,sd=2)
+radi<-rnorm(n = 100000, mean = 20,sd=2)
+areas<-sapply(radi,area)
+area(20)
+mean(areas)-pi*area(20)
+mean(areas)-pi*4
+area(20)
+mean(areas)-pi*4
+#1256.363
+?par
+par(mfrow = c(2,2))
+?rgamma
+?rchisq
+?rf
+hist(rnorm(10000,0,1))
+hist(rgamma(10000,0,1))
+rchisq(rnorm(10000,1))
+hist(rf(10000,1,2
+hist(rgamma(10000,1,1))
+rchisq(rnorm(10000,1))
+hist(rf(10000,1,2
+hist(rnorm(10000,0,1))
+hist(rf(10000,1,2 ))
+hist(rf(10000,4,2 ))
+hist(rf(100,5,2 ))
+qf(100,5,2 )
+hist(rf(100,5,2 ))
+hist(rf(100,5,5 ))
+rchisq(rnorm(10000,1))
+rchisq(rchisq(10000,1))
+hist(rchisq(10000,1))
+hist(rgamma(10000,1,1))
+hist(rnorm(10000,0,1))
+par(mfrow = c(2,2))
+hist(rnorm(10000,0,1))
+hist(rgamma(10000,1,1))
+hist(rchisq(10000,1))
+hist(rf(100,5,5 ))
+par(mfrow = c(2,2))
+hist(rnorm(10000,0,1))
+hist(rgamma(10000,1,1))
+hist(rchisq(10000,1))
+hist(rf(100,5,5 ))
+pchisq(q=100, df=80, ncp = 0, lower.tail = FALSE, log.p = FALSE)
+library(keras)
+library(magrittr)
+library(data.table)
+###Cleaning###
+sentiment_df<-fread("data/sentiment_raw.csv")
+sentiment_df<-sentiment_df[1:10000,]
+sentiment_df$ascii<-iconv(sentiment_df$JustText, "latin1", "ASCII", sub="")
+sentiment_df$no_repeats<-gsub("([[:alpha:]])\\1{2,}", "\\1", sentiment_df$ascii)
+sentiment_df$no_repeats<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$","",perl=TRUE,sentiment_df$no_repeats)
+sentiment_df<-sentiment_df[sapply(gregexpr("\\W+", sentiment_df$no_repeats), length) >1,]
+sentiment_df_small<-sentiment_df
+load("~/Documents/MAS/418/Hw4/data/cleaning_2.RData")
+set.seed(123)
+training_index<-sample(1:length(nn_predictors),length(nn_predictors)*.75)
+x_train<- nn_predictors
+x_test <- nn_predictors[-training_index]
+y_train<- sentiment_df_small$Sentiment
+y_test <- sentiment_df_small$Sentiment[-training_index]
+### Test and Train ###
+max_features <- length(factor_list)
+maxlen <- 80  # cut texts after this number of words
+batch_size <- 32
+print('Loading data...\n')
+cat(length(x_train), 'train sequences\n')
+cat(length(x_test), 'test sequences\n')
+print('Pad sequences (samples x time)\n')
+x_train <- pad_sequences(x_train, maxlen = maxlen)
+x_test <- pad_sequences(x_test, maxlen = maxlen)
+cat('x_train shape:', dim(x_train), '\n')
+cat('x_test shape:', dim(x_test), '\n')
+print('Build model...\n')
+model <- keras_model_sequential()
+model %>%
+layer_embedding(input_dim = max_features, output_dim = 128) %>%
+layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %>%
+layer_dense(units = 1, activation = 'sigmoid')
+# try using different optimizers and different optimizer configs
+model %>% compile(
+loss = 'binary_crossentropy',
+optimizer = 'adam',
+metrics = c('accuracy')
+)
+print('Train...\n')
+model %>% fit(
+x_train, y_train,
+batch_size = batch_size,
+epochs = 1,
+validation_data = list(x_test, y_test)
+)
+ggplot
+library(ggplot)
+install.packages("ggplot")
+library(ggplot2)
+ggplot(iris, aes(x=Species, y=Sepal.Length, fill=Phase)) +
+geom_bar(stat="identity") + coord_flip()
+ggplot(iris, aes(x=Species, y=Sepal.Length, fill=Phase)) +
+geom_bar(stat="identity") + coord_flip()
+names(iris)
+names(mtcars)
+view(mtcars)
+View(mtcars)
+ggplot(mtcars, aes(x=carb, y=mpg, fill=gear))
+ggplot(mtcars, aes(x=carb, y=mpg, fill=gear)) +
+geom_bar(stat="identity") + coord_flip()
+library(mgcv)
+qplot(carat, price, data = dsmall, geom = c("point", "smooth"),method = "gam", formula = y ~ s(x))
+dsmall
+qplot(mpg, disp, data = mtcars, geom = c("point", "smooth"),method = "gam", formula = y ~ s(x))
+qplot(mpg, disp, data = mtcars, geom = c("point", "smooth"), formula = y ~ s(x))
+qplot(mpg, disp, data = mtcars, geom = c("point", "smooth"))
+View(AirPassengers)
+austres
+LakeHuron
+qplot( data = LakeHuron, geom = c("point", "smooth"))
+View(LakeHuron)
+View(as.data.frame(LakeHuron))
+str(LakeHuron)
+time(LakeHuron)
+lake = data.frame(LakeHuron,time(LakeHuron)
+)
+names(lake)
+?data.frame
+lake = data.frame(LakeHuron,time(LakeHuron),names = c("level","time"))
+names(lake)
+names(lake) = c("level","time")
+library(mgcv)
+lake = data.frame(LakeHuron,time(LakeHuron))
+names(lake) = c("level","time")
+qplot(level, time, data = lake, geom = c("point", "smooth"))
+qplot(time, level, data = lake, geom = c("point", "smooth"))
+as.numeric(LakeHuron)
+lake = data.frame(as.numeric(LakeHuron),time(LakeHuron))
+names(lake) = c("level","time")
+qplot(time, level, data = lake, geom = c("point", "smooth"))
+lake = data.frame(LakeHuron,as.numeric(time(LakeHuron)))
+names(lake) = c("level","time")
+qplot(time, level, data = lake, geom = c("point", "smooth"))
+lake = data.frame(as.numeric(LakeHuron),as.numeric(time(LakeHuron)))
+names(lake) = c("level","time")
+qplot(time, level, data = lake, geom = c("point", "smooth"))
+as.numeric(LakeHuron)
+as.numeric(time(LakeHuron))
+lake = data.frame(as.numeric(LakeHuron)[1:10],as.numeric(time(LakeHuron))[1:10])
+lake
+lake = data.frame(as.numeric(LakeHuron)[1:10],as.numeric(time(LakeHuron))[1:10])
+names(lake) = c("level","time")
+qplot(time, level, data = lake, geom = c("point", "smooth"))
+n <- 10
+d <- data.frame(x = 1:n, y = rnorm(n))
+ggplot(d,aes(x,y)) + geom_point() +
+geom_line(data=data.frame(spline(d, n=n*10)))
+aes
+?aes
+ggplot(d,aes(x,y))
+ggplot(d,aes(x,y)) + geom_point()
+geom_line(data=data.frame(spline(d)))
+geom_line(data=data.frame(spline(d, n=n)))
+geom_line(data=data.frame(spline(d, n=n*10)))
+ggplot(d,aes(x,y)) + geom_point() +
+geom_line(data=data.frame(spline(d))
+)
+ggplot(d,aes(x,y)) + geom_point() +
+geom_line(data=data.frame(spline(d,n=n)))
+ggplot(d,aes(x,y)) + geom_point() +
+geom_line(data=data.frame(spline(d,n=n*10)))
+install.packages(c("bindrcpp", "boot", "cluster", "codetools", "coin", "colorspace", "curl", "DBI", "deldir", "devtools", "digest", "dplyr", "evaluate", "foreign", "formatR", "ggplot2", "git2r", "glmnet", "glue", "goftest", "h2o", "htmltools", "htmlwidgets", "httpuv", "httr", "keras", "knitr", "lattice", "lme4", "lubridate", "maps", "markdown", "MASS", "Matrix", "mgcv", "mime", "mvtnorm", "nlme", "openssl", "packrat", "party", "plotly", "polyclip", "pROC", "purrr", "R6", "randomForestSRC", "Rcpp", "RcppEigen", "reshape", "reshape2", "reticulate", "rlang", "rmarkdown", "RMySQL", "rpart", "rsconnect", "RSQLite", "rstudioapi", "sandwich", "scales", "shiny", "sp", "spatstat", "splancs", "sqldf", "stringi", "stringr", "survival", "tensorflow", "tibble", "tidyr", "viridis", "withr", "XML", "zoo"))
+install.packages(c("bindrcpp", "boot", "cluster", "codetools",
+setwd("~/Documents/MAS/thesis/Reinforcement-Learning-Study/data/node_test")
+performance0_1046<-read.csv("results0-1046.csv",header=TRUE)
+View(performance0_1046)
+cov(performance0_1046)
+View(cov(performance0_1046))
+cov(iris)
+iris
+cov(iris[1:4])
+var(iris[1:4])
+View(corr(performance0_1046))
+View(cor(performance0_1046))
+lm(success_rate~.,data=performance0_1046)
+summary(lm(success_rate~.,data=performance0_1046))
+plot(convolve_shape_x,data = performance0_1046)
+plot(performance0_1046$convolve_shape_x, performance0_1046$success_rate, main = "Convolve Shape X vs Success")
+performance0_1046$convolve_shape_x
+plot(performance0_1046$convolve_shape_y, performance0_1046$success_rate, main = "Convolve Shape Y vs Success")
+plot(performance0_1046$binarize_threshold, performance0_1046$success_rate, main = "Binarize Threshold vs Success")
+plot(performance0_1046$down_scale_ratio, performance0_1046$success_rate, main = "Down Scale Ratio vs Success")
+sort(performance0_1046$success_rate)
+performance0_1046=performance0_1046[sort(performance0_1046$success_rate, decreasing = TRUE)]
+performance0_1046
+performance0_1046<-read.csv("results0-1046.csv",header=TRUE)
+performance0_1046=performance0_1046[sort(performance0_1046$success_rate, decreasing = TRUE),]
+performance0_1046
+performance0_1046<-read.csv("results0-1046.csv",header=TRUE)
+performance0_1046=performance0_1046[order(performance0_1046$success_rate, decreasing = TRUE),]
+performance0_1046
+View(performance0_1046)
+setwd("~/Documents/MAS/thesis/Reinforcement-Learning-Study/node_test_data")
+performance0_1046<-read.csv("results0-2720.csv",header=TRUE)
+plot(performance0_1046$success_rate)
+#Real Linear Affect
+summary(lm(success_rate~.,data=performance0_1046))
+#Covariance
+View(cor(performance0_1046))
+#Graphs
+plot(performance0_1046$convolve_shape_x, performance0_1046$success_rate, main = "Convolve Shape X vs Success")
+plot(performance0_1046$convolve_shape_y, performance0_1046$success_rate, main = "Convolve Shape Y vs Success")
+plot(performance0_1046$binarize_threshold, performance0_1046$success_rate, main = "Binarize Threshold vs Success")
+plot(performance0_1046$down_scale_ratio, performance0_1046$success_rate, main = "Down Scale Ratio vs Success")
+performance0_1046=performance0_1046[order(performance0_1046$success_rate, decreasing = TRUE),]
+View(performance0_1046)

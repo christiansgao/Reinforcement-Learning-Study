@@ -1,16 +1,14 @@
 import numpy as np
-import sklearn.metrics as sk_metrics
-from scipy import ndimage
-from hashlearner.helper.mnist import MnistLoader
+from skopt import gp_minimize
 
+def f(x):
+    return (np.sin(5 * x[0]) * (1 - np.tanh(x[0] ** 2)) *
+            np.random.randn() * 0.1)
 #mnist_data = MnistLoader.read_mnist()
 #mnist_data = mnist_data[0][1]
 
+res = gp_minimize(f, [(-2.0, 2.0)])
 
-a = np.array([[1, 2, 3, 1],[0, 0, 0, 0],[0, 0, 0, 0],[0, 0, 0, 0]])
-k = np.array([[1,1,1],[1,1,1],[1,1,1]])
-test = ndimage.convolve(a, k, mode='constant', cval=0.0)
-print(test)
 
+print(res)
 #blurred_face = ndimage.gaussian_filter(mnist_data, sigma=3)
-pass
