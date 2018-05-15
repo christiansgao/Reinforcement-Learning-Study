@@ -18,14 +18,14 @@ def edge(mnist_image):
     sob = np.hypot(sx, sy)
     return sob
 
-def convolve(mnist_image, kernel=SHARPEN):
+def convolve_filter(mnist_image, kernel=SHARPEN):
     convolved_image = ndimage.convolve(mnist_image, kernel, mode='constant', cval=0.0)
     return convolved_image
 
 def main():
     mnist_image = MnistLoader.get_example()
     MnistLoader.show(mnist_image)
-    test = convolve(mnist_image, kernel=EDGE_KERNEL_1)
+    test = convolve_filter(mnist_image, kernel=EDGE_KERNEL_1)
     MnistLoader.show(test)
     pass
 

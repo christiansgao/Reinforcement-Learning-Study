@@ -9,6 +9,7 @@ import hashlearner.helper.CSVHelper as CSVHelper
 from hashlearner.helper.mnist import MnistLoader
 from hashlearner.mnistnodes.SimpleHBaseMnistNode import SimpleHBaseMnistNode
 from string import Template
+from hashlearner.mnistnodes.FilterHBaseMnistNode import FilterHBaseMnistNode
 from hashlearner.mnistnodes.MnistNode import MnistNode
 
 
@@ -17,10 +18,12 @@ def execute_iterations():
     mnist_data = MnistLoader.read_mnist()
     train = mnist_data[:50000]
     test = mnist_data[50000:]
-    nodes = [SimpleHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4),
-             SimpleHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6),
-             SimpleHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8),
-             SimpleHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.5)
+
+    nodes = [FilterHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4),
+             FilterHBaseMnistNode(down_scale_ratio=.4),
+             FilterHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.6),
+             FilterHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.8),
+             FilterHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.5)
              ]
 
     for node in nodes:

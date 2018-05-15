@@ -43,21 +43,23 @@ get_performance = function(predicted, expected){
   print(paste("Succes Rate:",success_rate))
 }
 
-get_all_performance(testing){
+get_all_performance = function (testing){
   print("getting all initial performance")
   expected = testing$expected
-  for(predicted in testing[-1])
+  for(predicted in testing[-1]){
     get_performance(predicted,expected)
+  }
 }
 
 main = function(){
   
-  folder = "./analysis_results_1-2000-4000/"
+  folder = "./analysis_results_total/"
   training = get_data_from_folder(split_ratio = .5, folder = folder, first_half = TRUE)  
   testing = get_data_from_folder(split_ratio = .5, folder = folder, first_half = FALSE)
   trained_rf = train_rf(training, ntrees = 100)
   plot(trained_rf)
   predicted = test_rf(testing, trained_rf)
+  get_all_performance(training)
   get_performance(predicted, testing$expected)
   
 }
