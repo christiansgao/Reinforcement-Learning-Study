@@ -14,7 +14,7 @@ class MnistImage:
         self.images = image
 
 
-def read_mnist(dataset = "training", path = "/Users/christiangao/Documents/MAS/thesis/Reinforcement-Learning-Study/data/"):
+def read_mnist(path = None, dataset = "training", ismac = False):
     """
     Python function for importing the MNIST data set.  It returns an iterator
     of 2-tuples with the first element being the label and the second element
@@ -22,7 +22,11 @@ def read_mnist(dataset = "training", path = "/Users/christiangao/Documents/MAS/t
     """
 
     #path = os.path.abspath(path)
-    #path = "/home/christian/Documents/Reinforcement-Learning-Study/data/"
+
+    if ismac:
+        path = "/Users/christiangao/Documents/MAS/thesis/Reinforcement-Learning-Study/data/"
+    else:
+        path = "/home/christian/Documents/Reinforcement-Learning-Study/data/"
 
     if dataset is "training":
         fname_img = os.path.join(path, 'train-images-idx3-ubyte')

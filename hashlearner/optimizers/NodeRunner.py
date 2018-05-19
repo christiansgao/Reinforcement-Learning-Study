@@ -10,16 +10,18 @@ from hashlearner.helper.mnist import MnistLoader
 from hashlearner.mnistnodes.SimpleHBaseMnistNode import SimpleHBaseMnistNode
 from string import Template
 from hashlearner.mnistnodes.FilterHBaseMnistNode import FilterHBaseMnistNode
+from hashlearner.helper.mnist import Filters
 from hashlearner.mnistnodes.MnistNode import MnistNode
 
 
 def execute_iterations():
 
-    mnist_data = MnistLoader.read_mnist()
+    mnist_data = MnistLoader.read_mnist(ismac=False)
     train = mnist_data[:50000]
     test = mnist_data[50000:]
 
-    nodes = [FilterHBaseMnistNode(down_scale_ratio=.4)
+    nodes = [
+             FilterHBaseMnistNode(table_name="Filtered_Mnist_5",down_scale_ratio=.4, kernel=Filters.EDGE_KERNEL_3)
              #FilterHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4),
              #FilterHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.5),
              #FilterHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.4),
