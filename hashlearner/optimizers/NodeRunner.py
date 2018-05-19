@@ -1,4 +1,3 @@
-
 import time
 
 import numpy as np
@@ -15,26 +14,30 @@ from hashlearner.mnistnodes.MnistNode import MnistNode
 
 
 def execute_iterations():
-
-    mnist_data = MnistLoader.read_mnist(ismac=False)
-    train = mnist_data[:50000]
-    test = mnist_data[50000:]
+    train = MnistLoader.read_mnist(dataset = "training", ismac=False)
+    test = MnistLoader.read_mnist(dataset = "testing", ismac=False)
 
     nodes = [
-             FilterHBaseMnistNode(table_name="Filtered_Mnist_7",down_scale_ratio=.4, kernel=Filters.EDGE_KERNEL_3)
-             #FilterHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4),
-             #FilterHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.5),
-             #FilterHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.4),
-             #FilterHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.3)
-             ]
+        FilterHBaseMnistNode(table_name="Filtered_Mnist_1", down_scale_ratio=.4, kernel=Filters.EDGE_KERNEL_3),
+        FilterHBaseMnistNode(table_name="Filtered_Mnist_1", down_scale_ratio=.4, kernel=Filters.SHARPEN),
+
+        FilterHBaseMnistNode(convolve_shape=(8, 13), binarize_threshold=200, down_scale_ratio=.4),
+        FilterHBaseMnistNode(convolve_shape=(5, 9), binarize_threshold=160, down_scale_ratio=.5),
+        FilterHBaseMnistNode(convolve_shape=(4, 6), binarize_threshold=200, down_scale_ratio=.4),
+        FilterHBaseMnistNode(convolve_shape=(12, 6), binarize_threshold=150, down_scale_ratio=.3)
+    ]
 
     for node in nodes:
         run_node(node, train, test)
 
+
 def extract_name(node: SimpleHBaseMnistNode):
     name_template = Template("${name}_${conv_1}.${conv_2}_${thresh}_${scale}")
-    name = name_template.substitute(name= node.table_name, conv_1 = str(node.convolve_shape[0]), conv_2=str(node.convolve_shape[1]), thresh=node.binarize_threshold, scale=node.down_scale_ratio)
+    name = name_template.substitute(name=node.table_name, conv_1=str(node.convolve_shape[0]),
+                                    conv_2=str(node.convolve_shape[1]), thresh=node.binarize_threshold,
+                                    scale=node.down_scale_ratio)
     return name
+
 
 def run_node(mnist_node: SimpleHBaseMnistNode, train, test):
     name = extract_name(mnist_node)
@@ -64,8 +67,10 @@ def run_node(mnist_node: SimpleHBaseMnistNode, train, test):
     t1 = time.time()
     print("Total Time taken: " + str(t1 - t0) + " Seconds")
 
+
 def main():
     execute_iterations()
+
 
 if __name__ == "__main__":
     main()

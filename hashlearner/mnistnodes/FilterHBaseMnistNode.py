@@ -31,8 +31,8 @@ class FilterHBaseMnistNode(MnistNode):
     CONNECTION_POOL_SIZE = 300
     COLUMN_NAME = "number"
 
-    def __init__(self,kernel, table_name = TABLE_NAME, beta_weights = np.ones(10), setup_table=True, convolve_shape=CONVOLVE_SHAPE,
-                 down_scale_ratio=DOWN_SCALE_RATIO, binarize_threshold=BINARIZE_THRESHOLD):
+    def __init__(self,table_name = TABLE_NAME, beta_weights = np.ones(10), setup_table=True, convolve_shape=CONVOLVE_SHAPE,
+                 down_scale_ratio=DOWN_SCALE_RATIO, binarize_threshold=BINARIZE_THRESHOLD, kernel=Filters.SHARPEN):
         super().__init__()
 
         self.binarize_threshold = binarize_threshold
@@ -80,8 +80,8 @@ class FilterHBaseMnistNode(MnistNode):
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
 
-        #mnist_image = Filters.convolve_filter(mnist_image, kernel=self.kernel)
-        mnist_image = Filters.edge(mnist_image)
+        mnist_image = Filters.convolve_filter(mnist_image, kernel=self.kernel)
+        #mnist_image = Filters.edge(mnist_image)
         convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.convolve_shape)
         images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.down_scale_ratio)
         binarized_images = MnistHelper.binarize_images(images_rescaled, threshold=self.binarize_threshold)
