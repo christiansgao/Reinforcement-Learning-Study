@@ -40,6 +40,13 @@ get_binary_data_from_folder = function(split_ratio, folder, first_half){
   return(one_hot_df)
 }
 
+get_binary_data_total = function(split_ratio, folder, first_half){
+  total_df = get_data_from_folder(split_ratio, folder, first_half)
+  encoder <- onehot(total_df)
+  one_hot_df <- data.frame(predict(encoder, total_df))
+  return(one_hot_df)
+}
+
 train_rf = function(training, ntrees = 100){
   trained_rf=randomForest(expected ~ . , data = training, ntrees=ntrees)
   return(trained_rf)
@@ -66,27 +73,53 @@ get_all_performance = function (testing){
   }
 }
 
+adaboost_train = function(training,n.trees = 100){
+  
+  expected_names = c("expected.0","expected.1", "expected.2" ,"expected.3" ,"expected.4", "expected.5", "expected.6" ,"expected.7" ,"expected.8", "expected.9")
+  raw_training = training[names(training) != expected_names]
+  ada_list = NULL
+  i = 1
+  
+  for(expected_name in expected_names){
+    bin_training = cbind(training[expected_name],raw_training)
+    bin_training = as.data.frame(as.matrix(bin_training))
+    f = as.formula(paste(expected_name,' ~ .'))
+    gbm_algorithm <- gbm(f, data = bin_training, distribution = "adaboost", n.trees = n.trees)
+    ada_list[i] = list(gbm_algorithm)
+    i=i+1
+  }
+  
+  ada_list
+}
+
+adaboost_predict = function(testing,trained_ada_list){
+  extract_prediction = function(trained_ada,testing){
+    gbm_predicted <- predict(trained_ada, testing, n.trees = 10)
+    gbm_predicted <- plogis(2*gbm_predicted)
+    return(gbm_predicted)
+  }
+  
+  probs = lapply(trained_ada_list, FUN=extract_prediction,testing=testing)
+  probs_df = as.data.frame(do.call(cbind,probs))
+  
+  apply(probs_df,MARGIN = 2,FUN=sd)
+  probs_df=scale(probs_df, scale=FALSE)
+  colMeans(probs_df)
+  
+  predicted = apply(MARGIN = 1, probs_df, FUN = function(row_df) which(row_df == max(row_df))[[1]])-1
+  predicted
+}
+
 main = function(){
   
   folder = "./analysis_results_1-50000-60000/"
-  training = get_data_from_folder(split_ratio = .5, folder = folder, first_half = TRUE)  
-  testing = get_data_from_folder(split_ratio = .5, folder = folder, first_half = FALSE)
-  trained_rf = train_rf(training, ntrees = 100)
-  predicted = test_rf(testing, trained_rf)
+  training = get_binary_data_total(split_ratio = .5, folder = folder, first_half = TRUE)  
+  testing = get_binary_data_total(split_ratio = .5, folder = folder, first_half = FALSE)
+  expected = get_data_from_folder(split_ratio = .5, folder = folder, first_half = FALSE)$expected
+  trained_ada_list = adaboost_train(training, n.trees = 1000)
+  predicted = adaboost_predict(testing, trained_ada_list)
   #get_all_performance(testing)
-  get_performance(predicted, testing$expected)
-  
-}
-
-main - function(){
-  
-  folder = "./analysis_results_1-50000-60000/"
-  training = get_binary_data_from_folder(split_ratio = .5, folder = folder, first_half = TRUE)  
-  testing = get_binary_data_from_folder(split_ratio = .5, folder = folder, first_half = FALSE)
-  trained_rf = train_rf(training, ntrees = 1000)
-  predicted = test_rf(testing, trained_rf)
-  #get_all_performance(testing)
-  get_performance(predicted, testing$expected)
+  get_performance(predicted, expected)
 }
 
 main()
