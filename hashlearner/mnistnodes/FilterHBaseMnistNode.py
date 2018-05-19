@@ -80,8 +80,8 @@ class FilterHBaseMnistNode(MnistNode):
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
 
-        mnist_image = Filters.convolve_filter(mnist_image, kernel=self.kernel)
-        #mnist_image = Filters.gaussian(mnist_image, sigma=2)
+        #mnist_image = Filters.convolve_filter(mnist_image, kernel=self.kernel)
+        mnist_image = Filters.edge(mnist_image)
         convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.convolve_shape)
         images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.down_scale_ratio)
         binarized_images = MnistHelper.binarize_images(images_rescaled, threshold=self.binarize_threshold)
