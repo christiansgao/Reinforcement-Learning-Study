@@ -117,46 +117,11 @@ main = function(){
   training = get_binary_data_total(split_ratio = .5, folder = folder, first_half = TRUE)  
   testing = get_binary_data_total(split_ratio = .5, folder = folder, first_half = FALSE)
   expected = get_data_from_folder(split_ratio = .5, folder = folder, first_half = FALSE)$expected
-  trained_xg_list = xg_boost_train(training, nround = 2)
+  trained_xg_list = xg_boost_train(training, nround = 10)
   predicted = xgb_predict(testing, trained_xg_list)
   #get_all_performance(testing)
   get_performance(predicted, expected)
 }
 
 main()
-
-xg_boost = function(){
-  
-  folder = "./analysis_results_1-50000-60000/"
-  training = get_binary_data_from_folder(split_ratio = .5, folder = folder, first_half = TRUE)  
-  testing = get_binary_data_from_folder(split_ratio = .5, folder = folder, first_half = FALSE)
-
-  gdis<-maboost(expected ~ . , data = training,iter=50,nu=2
-                ,breg="l2", type="sparse",bag.frac=1,random.feature=FALSE
-                ,random.cost=FALSE, C50tree=FALSE, maxdepth=6,verbose=TRUE)
-  predicted= predict(gdis,testing,type="class");
-
-  get_performance(predicted, testing$expected)
-  
-  gbm_algorithm <- gbm(expected ~ ., data = training, distribution = "adaboost", n.trees = 100)
-  gbm_predicted <- predict(gbm_algorithm, test_dataset, n.trees = 5000)
-  
-  xgb <- xgboost(data = data.matrix(training[,-51]), 
-                 label = expected, 
-                 eta = 0.1,
-                 max_depth = 15, 
-                 nround=25, 
-                 subsample = 0.5,
-                 colsample_bytree = 0.5,
-                 seed = 1,
-                 eval_metric = "merror",
-                 objective = "multi:softprob",
-                 num_class = 12,
-                 nthread = 3
-  )
-  
-  predicted <- predict(xgb, data.matrix(testing[,-51]))
-  get_performance(predicted, testing$expected)
-  
-}
   

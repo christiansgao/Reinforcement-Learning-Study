@@ -123,8 +123,8 @@ class FilterHBaseMnistNode(MnistNode):
 
 
 def main():
-    mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:1000]
+    mnist_data = MnistLoader.read_mnist(ismac=True)
+    mnist_data = mnist_data[:10]
 
     t0 = time.time()
 
