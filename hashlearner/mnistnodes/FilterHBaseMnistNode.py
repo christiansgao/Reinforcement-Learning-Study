@@ -26,12 +26,12 @@ class FilterHBaseMnistNode(MnistNode):
     DOWN_SCALE_RATIO = .5
     BINARIZE_THRESHOLD = 80
     TABLE_NAME = "Filtered-Mnist-Node-1"
-    BATCH_SIZE = 100
+    BATCH_SIZE = 200
     POOL_SIZE = 10
     CONNECTION_POOL_SIZE = 300
     COLUMN_NAME = "number"
 
-    def __init__(self, beta_weights = np.ones(10), setup_table=False, convolve_shape=CONVOLVE_SHAPE,
+    def __init__(self,kernel, table_name = TABLE_NAME, beta_weights = np.ones(10), setup_table=True, convolve_shape=CONVOLVE_SHAPE,
                  down_scale_ratio=DOWN_SCALE_RATIO, binarize_threshold=BINARIZE_THRESHOLD):
         super().__init__()
 
@@ -39,10 +39,12 @@ class FilterHBaseMnistNode(MnistNode):
         self.convolve_shape = convolve_shape
         self.down_scale_ratio = down_scale_ratio
         self.beta_weights = beta_weights
+        self.table_name = table_name
         if setup_table:
             self.setup()
 
         self.cached_predictions = {}
+        self.kernel = kernel
 
     def train_batch(self, mnist_batch, index):
         '''
@@ -78,19 +80,21 @@ class FilterHBaseMnistNode(MnistNode):
 
     def extract_keys(self, mnist_image: np.ndarray, index: int):
 
-        mnist_image = Filters.edge(mnist_image)
+        mnist_image = Filters.convolve_filter(mnist_image, kernel=self.kernel)
+        #mnist_image = Filters.gaussian(mnist_image, sigma=2)
         convolved_images = MnistHelper.convolve(mnist_image, kernel_dim=self.convolve_shape)
         images_rescaled = MnistHelper.down_scale_images(convolved_images, ratio=self.down_scale_ratio)
-        binarized_images = MnistHelper.interpolate_images(images_rescaled, bins=np.array([0, 100, 200, 280]))
+        binarized_images = MnistHelper.binarize_images(images_rescaled, threshold=self.binarize_threshold)
+        #binarized_images = MnistHelper.interpolate_images(images_rescaled, bins=np.array([0, 100, 200, 280]))
         feature_positions = list(range(len(binarized_images)))
 
         hash_keys = [re.sub("[^0-9]+", "", str(binarized_image)) for binarized_image in binarized_images]
         feature_position_pair = list(zip(hash_keys, feature_positions))
         useful_features = list(filter(lambda x: int(x[0]) != 0, feature_position_pair))
-        positioned_shaped_keys = [ "{}-{}-{}-{}".format(str(position),self.convolve_shape[0], self.convolve_shape[1],key)
+        positioned_keys = [ "{}-{}-{}-{}".format(str(position),self.convolve_shape[0], self.convolve_shape[1],key)
                                    for key, position in useful_features]
 
-        return positioned_shaped_keys
+        return positioned_keys
 
     def predict_from_image_batch(self, mnist_batch, index):
 
@@ -126,7 +130,10 @@ def main():
 
     train, test = sk_model.train_test_split(mnist_data, test_size=0.2)
 
-    mnist_node = FilterHBaseMnistNode(setup_table=True, convolve_shape= (8, 8), down_scale_ratio=.3)
+    #mnist_node = FilterHBaseMnistNode(convolve_shape= (8, 8), down_scale_ratio=.3)
+
+    mnist_node = FilterHBaseMnistNode(down_scale_ratio=.4)
+
     status = mnist_node.train_node(train)
     print("training status: " + str(status))
 

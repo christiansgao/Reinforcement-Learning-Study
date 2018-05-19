@@ -2,6 +2,7 @@
 import numpy as np
 from scipy import ndimage
 from hashlearner.helper.mnist import MnistLoader
+import scipy.signal as signal
 
 EDGE_KERNEL_1 = np.array([[1,0,-1],[0,0,0],[-1,0,1]])
 EDGE_KERNEL_2 = np.array([[0,1,0],[1,-2,1],[0,1,0]])
@@ -18,14 +19,18 @@ def edge(mnist_image):
     sob = np.hypot(sx, sy)
     return sob
 
-def convolve(mnist_image, kernel=SHARPEN):
+def convolve_filter(mnist_image, kernel=SHARPEN):
     convolved_image = ndimage.convolve(mnist_image, kernel, mode='constant', cval=0.0)
+    return convolved_image
+
+def convolve_filter(mnist_image, kernel=SHARPEN):
+    convolved_image = signal.convolve2d(in1=mnist_image, in2=kernel)
     return convolved_image
 
 def main():
     mnist_image = MnistLoader.get_example()
     MnistLoader.show(mnist_image)
-    test = convolve(mnist_image, kernel=EDGE_KERNEL_1)
+    test = convolve_filter(mnist_image, kernel=EDGE_KERNEL_1)
     MnistLoader.show(test)
     pass
 

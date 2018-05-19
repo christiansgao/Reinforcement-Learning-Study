@@ -15,8 +15,8 @@ class HBaseRow:
 
 
 class HBaseManager:
-    #HOST = '0.0.0.0'
-    HOST = 'hbase-docker'
+    HOST = '0.0.0.0'
+    #HOST = 'hbase-docker'
     PORT = 9090
     BATCH_SIZE = 1000
     FAMILY_NAME = "data"

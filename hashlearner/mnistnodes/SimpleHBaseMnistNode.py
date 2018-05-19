@@ -178,12 +178,13 @@ class SimpleHBaseMnistNode(MnistNode):
 
 
 def main():
+    print("starting hbase mnist node")
     mnist_data = MnistLoader.read_mnist()
-    mnist_data = mnist_data[:100]
+    mnist_data = mnist_data[:1000]
 
     t0 = time.time()
 
-    train, test = sk_model.train_test_split(mnist_data, test_size=0.1)
+    train, test = sk_model.train_test_split(mnist_data, test_size=0.2)
 
     mnist_node = SimpleHBaseMnistNode(setup_table=True)
     status = mnist_node.train_node(train)
