@@ -1,6 +1,5 @@
 import happybase
 
-
 class HBaseRow:
 
     def __init__(self, row_key, row_values, family_name=None):
@@ -57,6 +56,29 @@ class HBaseManager:
 
             return True
 
+    def batch_increment(self, table_name, batch_increments):
+        '''
+        :type batch_increments: list of HBaseRow
+        :rtype: boolean
+        '''
+        with self.connection_pool.connection() as connection:
+            table = connection.table(table_name)
+            #test = table.counter_set(b'row-key', b'data:clo1"', 12)
+            #test = table.counter_inc(b'row-key', "data:clo1")
+            #test = table.counter_inc(b'row-key', "data:clo1")
+
+
+            try:
+                for row in batch_increments:
+                    for col, value in row.row_values.items():
+                        test = table.counter_inc(row.row_key, col, value = value)
+
+            except ValueError:
+                print("HBase Batch Insert Failed!")
+                return False
+
+            return True
+
     def batch_get_rows(self, table_name: str, row_keys: list):
         '''
         :rtype: list of HBaseRow
@@ -71,8 +93,7 @@ class HBaseManager:
         converted_row = {k.decode("utf-8"): v.decode("utf-8") for k, v in row_values.items()}
         return converted_row
 
-
-def main():
+def test1():
     pool = happybase.ConnectionPool(size=3, host=HBaseManager.HOST, port=HBaseManager.PORT )
     hbase_manager = HBaseManager(pool)
     table_name = "test_table"
@@ -86,6 +107,23 @@ def main():
     print("output is: ")
     print(output[0])
     print(output[1])
+
+def test2():
+    pool = happybase.ConnectionPool(size=3, host=HBaseManager.HOST, port=HBaseManager.PORT )
+    hbase_manager = HBaseManager(pool)
+    table_name = "test_table"
+    insert_rows = [HBaseRow("key1", {"col1": 1, "col2":2}, family_name=HBaseManager.FAMILY_NAME)]
+
+    hbase_manager.create_table(table_name)
+    hbase_manager.batch_increment(table_name, insert_rows)
+
+    output = hbase_manager.batch_get_rows(table_name, ["key1", "key2"])
+    print("output is: ")
+    print(output[0])
+    print(output[1])
+
+def main():
+    test2()
 
 
 if __name__ == "__main__":

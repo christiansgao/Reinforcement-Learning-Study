@@ -19,6 +19,7 @@ class HashModel(ABC):
         self.data = data
         self.response_index = response_indexs[0]
         self.hash_node_list: array[HashNode] = []
+        self.response_set = list(set(data.iloc[:,self.response_index]))
 
         if predictor_indexes == None:
             self.predictor_indexes = list(range(0, data.shape[1]))

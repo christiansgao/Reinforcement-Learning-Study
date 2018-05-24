@@ -82,7 +82,7 @@ xg_boost_train = function(training,nround = 10){
   
   for(expected_name in EXPECTED_NAMES){
     label = as.numeric(unlist(training[expected_name]))
-    bstSparse <- xgboost(data = raw_training, label = label, max.depth = 2, eta = 1, nthread = 2, nround = nround, objective = "binary:logistic")
+    bstSparse <- xgboost(data = raw_training, label = label, max.depth = 5, eta = 1, nthread = 2, nround = nround, objective = "binary:logistic")
     xg_list[i] = list(bstSparse)
     i=i+1
   }
@@ -104,7 +104,7 @@ xgb_predict = function(testing,xg_list){
   probs_df = as.data.frame(do.call(cbind,probs))
   
   apply(probs_df,MARGIN = 2,FUN=sd)
-  probs_df=scale(probs_df, scale=FALSE)
+  probs_df=scale(probs_df, scale=TRUE)
   colMeans(probs_df)
   
   predicted = apply(MARGIN = 1, probs_df, FUN = function(row_df) which(row_df == max(row_df))[[1]])-1
@@ -117,11 +117,12 @@ main = function(){
   training = get_binary_data_total(split_ratio = .5, folder = folder, first_half = TRUE)  
   testing = get_binary_data_total(split_ratio = .5, folder = folder, first_half = FALSE)
   expected = get_data_from_folder(split_ratio = .5, folder = folder, first_half = FALSE)$expected
-  trained_xg_list = xg_boost_train(training, nround = 10)
-  predicted = xgb_predict(testing, trained_xg_list)
+  xg_list = xg_boost_train(training, nround = 8)
+  predicted = xgb_predict(testing, xg_list)
   #get_all_performance(testing)
   get_performance(predicted, expected)
 }
 
 main()
+1-0.964
   
